@@ -8,7 +8,12 @@ module.exports = {
         default2: '#ffff00'
       },
       width: {
-        custom1: '35rem'
+        custom1: '35rem',
+        login_signup: '27rem',
+        custom2: '70rem'
+      },
+      margin: {
+        custom1: '0.9rem'
       }
     },
   },
