@@ -8,4 +8,4 @@ function responses(status) {
     return null
 }
 
-module.exports = responses
+export default responses

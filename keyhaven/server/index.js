@@ -1,11 +1,13 @@
-const express = require("express")
-const cors = require("cors")
-const app = express()
-const pg = require("pg")
-const tables = require('./tables')
-const responses = require('./responses')
+import express from "express"
+import cors from "cors"
+import pg from "pg"
+import tables from './tables.js'
+import responses from './responses.js'
+import dotenv from 'dotenv'
+import bcrypt from 'bcryptjs'
 
-require('dotenv').config()
+const app = express()
+dotenv.config()
 const connectionString = process.env.CONNECTION_STRING
 
 app.use(express.json());
@@ -35,10 +37,11 @@ app.listen(process.env.PORT, () => {
     console.log(`server is live on port ${process.env.PORT}`)
 })
 
-app.get('/api', (req, res) =>
+app.get('/api', async (req, res) => {    
     res.status(200).send({
-        message: 'Welcome to Express Api',
+        message: `Welcome to KeyHaven's Express API`
     })
+}
 );
 
 app.post('/test', async (req, res) => {
@@ -96,3 +99,36 @@ app.post('/create-tables', async (req, res) => {
         console.log(err);
     }
 });
+
+app.post('/signup', async (req, res) => {
+    try {
+        const salt = await bcrypt.genSalt(12)
+        const hash = await bcrypt.hash(req.body.password, salt)
+        await client.query(`INSERT INTO accounts (email, password, joined, is_verified) VALUES('${req.body.email}', '${hash}', (NOW() AT TIME ZONE 'est'), false)`)
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
+
+app.get('/login', async (req, res) => {
+    try {
+        const isValidEmail = await client.query(`SELECT password FROM accounts WHERE email = '${req.query.email}'`)
+        if (isValidEmail.rows.length) {
+            const isValidPassword = await bcrypt.compare(`${req.query.password}`, `${isValidEmail.rows[0].password}`)
+            if (isValidPassword) {
+                const response = responses('success-default')
+                res.status(response.code).send(response.body)
+            } else {
+                throw('invalid credentials')
+            }
+        } else {
+            throw('invalid credentials')
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
