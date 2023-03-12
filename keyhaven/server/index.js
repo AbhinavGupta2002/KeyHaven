@@ -1,10 +1,10 @@
-import express from "express"
-import cors from "cors"
-import pg from "pg"
-import tables from './tables.js'
-import responses from './responses.js'
-import dotenv from 'dotenv'
-import bcrypt from 'bcryptjs'
+const express = require('express')
+const cors = require('cors')
+const pg = require('pg')
+const tables = require('./tables.js')
+const responses = require('./responses.js')
+const dotenv = require('dotenv')
+const bcrypt = require('bcryptjs')
 
 const app = express()
 dotenv.config()
@@ -113,6 +113,17 @@ app.post('/signup', async (req, res) => {
     }
 })
 
+function responses1(status) {
+    if (status) {
+        if (status === 'success-default') {
+            return {code: 200, body: {type: 'SUCCESS'}}
+        }
+        return null
+    }
+    return null
+}
+
+
 app.get('/login', async (req, res) => {
     try {
         const isValidEmail = await client.query(`SELECT password FROM accounts WHERE email = '${req.query.email}'`)
@@ -122,13 +133,16 @@ app.get('/login', async (req, res) => {
                 const response = responses('success-default')
                 res.status(response.code).send(response.body)
             } else {
-                throw('invalid credentials')
+                throw(responses('invalid credentials'))
             }
         } else {
-            throw('invalid credentials')
+            throw(responses('invalid credentials'))
         }
     } catch (err) {
-        console.log(err)
-        res.status(400).send(err)
+        if (err.hasOwnProperty('code')) {
+            res.status(err.code).send(err.body)
+        } else {
+            res.status(500).send(err)
+        }
     }
 })

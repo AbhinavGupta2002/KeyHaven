@@ -3,9 +3,9 @@ function responses(status) {
         if (status === 'success-default') {
             return {code: 200, body: {type: 'SUCCESS'}}
         }
-        return null
+        return {code: 400, body: {type: 'FAIL', message: status}}
     }
     return null
 }
 
-export default responses
+module.exports = responses

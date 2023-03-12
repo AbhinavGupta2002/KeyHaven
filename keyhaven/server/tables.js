@@ -4,5 +4,4 @@ const passwords = 'CREATE TABLE IF NOT EXISTS passwords (id SERIAL NOT NULL PRIM
 
 const circles = 'CREATE TABLE IF NOT EXISTS circles (id SERIAL NOT NULL PRIMARY KEY, title TEXT NOT NULL, members TEXT[]);'
 
-export default {accounts: accounts, passwords: passwords, circles: circles}
-
+module.exports = {accounts: accounts, passwords: passwords, circles: circles}
