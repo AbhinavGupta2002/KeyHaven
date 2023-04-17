@@ -4,4 +4,6 @@ const passwords = 'CREATE TABLE IF NOT EXISTS passwords (id SERIAL NOT NULL PRIM
 
 const circles = 'CREATE TABLE IF NOT EXISTS circles (id SERIAL NOT NULL PRIMARY KEY, title TEXT NOT NULL, members TEXT[]);'
 
-module.exports = {accounts: accounts, passwords: passwords, circles: circles}
+const refreshTokens = 'CREATE TABLE IF NOT EXISTS refresh_tokens (refresh_token TEXT PRIMARY KEY, expiry_date TIMESTAMP);'
+
+module.exports = {accounts: accounts, passwords: passwords, circles: circles, refreshTokens: refreshTokens}

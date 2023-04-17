@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import logo from '../img/logo1.png'
 import logo1 from '../img/logo-bg-blank1.png'
 import secureLogin from '../img/secureLogin.svg'
@@ -7,6 +7,7 @@ import { SignUp } from "./SignUp";
 
 export const Header = () => {
     const [isLogin, setIsLogin] = useState<Boolean>(false)
+    useEffect(() => {}, [isLogin])
     return (
         <div className="flex">
             <div className="bg-gray-200 w-1/2 h-screen">

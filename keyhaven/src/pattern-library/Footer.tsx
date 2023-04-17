@@ -1,9 +1,9 @@
 import React from "react";
 import logo from '../img/logo-side-bg-blank1.png'
 
-export const Footer = () => {
+export const Footer = ({isAbsolute=false}) => {
     return (
-        <footer aria-label="Site Footer" className="bg-default1">
+        <footer aria-label="Site Footer" className={`bg-default1 ${isAbsolute ? 'absolute bottom-0 w-full' : ''}`}>
             <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="sm:flex sm:items-center sm:justify-between">
                 <div className="flex justify-center text-teal-600 sm:justify-start">

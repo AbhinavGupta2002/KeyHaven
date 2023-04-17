@@ -5,6 +5,8 @@ const tables = require('./tables.js')
 const responses = require('./responses.js')
 const dotenv = require('dotenv')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const scheduler = require('node-schedule')
 
 const app = express()
 dotenv.config()
@@ -19,7 +21,7 @@ client.connect(function(err) {
     if(err) {
       return console.error('could not connect to postgres', err);
     }
-    client.query('SELECT NOW() AS "theTime"', function(err, result) {
+    client.query('SELECT NOW() AS "theTime";', function(err, result) {
         if(err) {
             return console.error('error running query', err);
         }
@@ -32,21 +34,56 @@ client.connect(function(err) {
 const accountSchema = tables.accounts
 const passwordSchema = tables.passwords
 const circleSchema = tables.circles
+const refreshTokensSchema = tables.refreshTokens
 
 app.listen(process.env.PORT, () => {
     console.log(`server is live on port ${process.env.PORT}`)
 })
 
+// scheduled cron jobs
+scheduler.scheduleJob('0 0 * * *', async () => { // runs once every day at 12 am to delete all refresh tokens in the table that are expired
+    await client.query(`DELETE FROM refresh_tokens WHERE expiry_date < NOW();`)
+})
+
+const authorizeUser = (req, res, next) => {
+    const authHeader = req.headers['authorization']
+    const bearerToken = authHeader && authHeader.split(' ')[1]
+    if (!bearerToken) {
+        const response = responses('bearer token missing')
+        return res.status(response.code).send(response.body)
+    }
+
+    jwt.verify(bearerToken, process.env.JWT_ACCESS_KEY, (err, user) => {
+        if (err) {
+            const response = responses('bearer token is invalid', 401)
+            return res.status(response.code).send(response.body)
+        }
+        req.user = user
+        next()
+    })
+}
+
+const generateRefreshToken = async (email) => {
+    let refreshToken = null
+    try {
+        refreshToken = jwt.sign({email: email}, process.env.JWT_REFRESH_KEY)
+        await client.query(`INSERT INTO refresh_tokens VALUES(${refreshToken}, (NOW() AT TIME ZONE 'est'))`)
+    } catch(err) {
+        console.log(err)
+    }
+    return refreshToken
+}
+
 app.get('/api', async (req, res) => {    
     res.status(200).send({
-        message: `Welcome to KeyHaven's Express API`
+        message: `Welcome to KeyHaven's Express Server`
     })
 }
 );
 
 app.post('/test', async (req, res) => {
     try {
-        const results = await client.query('CREATE TABLE IF NOT EXISTS abhinav( id SERIAL PRIMARY KEY, username TEXT UNIQUE )');
+        const results = await client.query('CREATE TABLE IF NOT EXISTS abhinav( id SERIAL PRIMARY KEY, username TEXT UNIQUE );');
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch (err) {
@@ -55,9 +92,9 @@ app.post('/test', async (req, res) => {
 });
 
 // select all rows from circles table
-app.get('/test1', async (req, res) => {
+app.get('/test1', authorizeUser, async (req, res) => {
     try {
-        const results = await client.query('SELECT * FROM circles');
+        const results = await client.query('SELECT * FROM circles;');
         res.json(results.rows);
     } catch (err) {
         console.log(err);
@@ -93,6 +130,7 @@ app.post('/create-tables', async (req, res) => {
         await client.query(accountSchema)
         await client.query(passwordSchema)
         await client.query(circleSchema)
+        await client.query(refreshTokensSchema)
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch(err) {
@@ -104,7 +142,7 @@ app.post('/signup', async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(12)
         const hash = await bcrypt.hash(req.body.password, salt)
-        await client.query(`INSERT INTO accounts (email, password, joined, is_verified) VALUES('${req.body.email}', '${hash}', (NOW() AT TIME ZONE 'est'), false)`)
+        await client.query(`INSERT INTO accounts (email, password, joined, is_verified) VALUES('${req.body.email}', '${hash}', (NOW() AT TIME ZONE 'est'), false);`)
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch (err) {
@@ -123,14 +161,15 @@ function responses1(status) {
     return null
 }
 
-
-app.get('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
+    console.log(req.body)
     try {
-        const isValidEmail = await client.query(`SELECT password FROM accounts WHERE email = '${req.query.email}'`)
+        const isValidEmail = await client.query(`SELECT password FROM accounts WHERE email = '${req.body.email}';`)
         if (isValidEmail.rows.length) {
-            const isValidPassword = await bcrypt.compare(`${req.query.password}`, `${isValidEmail.rows[0].password}`)
+            const isValidPassword = await bcrypt.compare(`${req.body.password}`, `${isValidEmail.rows[0].password}`)
             if (isValidPassword) {
-                const response = responses('success-default')
+                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '20s'})
+                const response = responses('success-value', bearerToken)
                 res.status(response.code).send(response.body)
             } else {
                 throw(responses('invalid credentials'))
