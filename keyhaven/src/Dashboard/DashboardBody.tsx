@@ -1,9 +1,18 @@
 import React from "react";
+import PersonalAccounts from "./PersonalAccounts";
 
-export const DashboardBody = () => {
+
+type DashboardBodyProps = {
+    nav: number
+}
+
+export const DashboardBody = ({nav}: DashboardBodyProps) => {
     return (
         <div className="pt-20 pl-5">
-            hellooo
+            {nav === 0 ?
+                <PersonalAccounts/>
+                : <></>
+            }
         </div>
     )
 }

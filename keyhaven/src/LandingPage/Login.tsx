@@ -7,7 +7,7 @@ import { Loader } from "../pattern-library/Loader";
 
 type LoginProps = {
     setIsLogin: Function
-  }
+}
   
 
 export const Login = ({setIsLogin}: LoginProps) => {
