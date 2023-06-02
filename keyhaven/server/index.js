@@ -35,7 +35,7 @@ const transporter = mailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'saccomander@gmail.com',
-    pass: 'Abhinav2002!'
+    pass: process.env.EMAIL_KEY
   }
 });
 
@@ -195,20 +195,20 @@ app.post('/login', async (req, res) => {
     }
 })
 
-app.get('/email', async (req, res) => {
+app.post('/email', async (req, res) => {
     try {
         const mailOptions = {
             from: 'saccomander@gmail.com',
-            to: 'abhinavgupta1882002@gmail.com',
-            subject: 'Sending Email using Node.js',
-            text: 'That was easy!'
+            to: req.body.receiverID,
+            subject: req.body.title,
+            html: `<h3 style="color: blue;">${req.body.content}</h3>`
         };
-
         transporter.sendMail(mailOptions, function(error, info){
             if (error) {
               throw(error);
             } else {
-                res.status(200).send(info.response)
+                const response = responses('success-default')
+                res.status(response.code).send(response.body)
             }
         });
     } catch (err) {

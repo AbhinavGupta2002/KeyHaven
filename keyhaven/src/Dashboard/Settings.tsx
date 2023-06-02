@@ -5,6 +5,9 @@ import { BoxTypeA } from "../pattern-library/BoxTypeA";
 import {FiEdit} from 'react-icons/fi'
 import {GoCheck} from 'react-icons/go'
 import {RxCross2} from 'react-icons/rx'
+import { DeleteAccountDialog } from "./DeleteAccountDialog";
+import { MyAlert } from "../pattern-library/Alert";
+import { sendEmail } from "../APIrequests";
 
 export const Settings = () => {
     const [isDisabled, setIsDisabled] = useState(true)
@@ -14,17 +17,25 @@ export const Settings = () => {
     const [lastName, setLastName] = useState('Gupta')
     const [prevFirstName, setPrevFirstName] = useState('')
     const [prevLastName, setPrevLastName] = useState('')
+    const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false)
+    const [showAlert, setShowAlert] = useState(false)
 
+    useEffect(() => {isEditFirstName && setPrevFirstName(firstName)}, [isEditFirstName])
+    useEffect(() => {isEditLastName && setPrevLastName(lastName)}, [isEditLastName])
     useEffect(() => {
-        if (isEditFirstName) {
-            setPrevFirstName(firstName)
-        } else if (isEditLastName) {
-            setPrevLastName(lastName)
+        if (showAlert) {
+            const req = {
+                receiverID: 'abhinavgupta1882002@gmail.com',
+                title: 'KeyHaven: Request to Change Master Password',
+                content: 'Please click the following link to change your master password for the account linked to this email. If you did not request this, contact customer support immediately'
+            }
+            sendEmail(req)
         }
-    }, [isEditFirstName, isEditLastName])
+    }, [showAlert])
 
     return (
         <>
+            <MyAlert isVisible={showAlert} setInvisible={() => setShowAlert(false)}/>
             <div className="text-2xl mb-9">Settings</div>
             <div className="ml-16 flex-col space-y-6">
                 <BoxTypeA classname="flex-col space-y-4 w-96">
@@ -73,10 +84,11 @@ export const Settings = () => {
                 </BoxTypeA>
                 <BoxTypeA classname="flex justify-between align-middle w-96">
                     <div className="font-semibold mt-2">Master Password</div>
-                    <Button value='Change' action={() => {}}/>
+                    <Button value='Change' action={() => setShowAlert(true)}/>
                 </BoxTypeA>
-                <Button classname='font-bold text-red-600' value='Delete Account' action={() => {}}/>
+                <Button classname='font-bold text-red-600' value='Delete Account' action={() => setShowDeleteAccountDialog(true)}/>
             </div>
+            <DeleteAccountDialog isVisible={showDeleteAccountDialog} cancelAction={() => setShowDeleteAccountDialog(false)}/>
         </>
     )
 }

@@ -40,3 +40,21 @@ export const getIconUrl = async (url: string) => {
         return undefined
     }
 }
+
+export const sendEmail = async(requestData: {receiverID: string, title: string, content: string}) => {
+    try {
+        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/email`, {
+            headers: {'Content-Type':'application/json'},
+            method: "POST",
+            body: JSON.stringify(requestData)
+        })
+        const responseValue = await response.json()
+        if (responseValue.type === 'FAIL') {
+            throw responseValue.message
+        }
+        return {type: 'SUCCESS'}
+    } catch (err) {
+        console.error(`ERROR: ${err}`)
+        return {type: 'FAIL'}
+    }
+}
