@@ -7,6 +7,7 @@ const dotenv = require('dotenv')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const scheduler = require('node-schedule')
+const mailer = require('nodemailer')
 
 const app = express()
 dotenv.config()
@@ -28,6 +29,14 @@ client.connect(function(err) {
         console.log(result.rows[0].theTime);
         // >> output: 2018-08-23T14:02:57.117Z
     });  
+});
+
+const transporter = mailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'saccomander@gmail.com',
+    pass: 'Abhinav2002!'
+  }
 });
 
 // table schemas
@@ -183,5 +192,26 @@ app.post('/login', async (req, res) => {
         } else {
             res.status(500).send(err)
         }
+    }
+})
+
+app.get('/email', async (req, res) => {
+    try {
+        const mailOptions = {
+            from: 'saccomander@gmail.com',
+            to: 'abhinavgupta1882002@gmail.com',
+            subject: 'Sending Email using Node.js',
+            text: 'That was easy!'
+        };
+
+        transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+              throw(error);
+            } else {
+                res.status(200).send(info.response)
+            }
+        });
+    } catch (err) {
+        res.status(500).send(err)
     }
 })

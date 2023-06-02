@@ -1,5 +1,6 @@
 import React from "react";
 import PersonalAccounts from "./PersonalAccounts";
+import { Settings } from "./Settings";
 
 
 type DashboardBodyProps = {
@@ -8,10 +9,11 @@ type DashboardBodyProps = {
 
 export const DashboardBody = ({nav}: DashboardBodyProps) => {
     return (
-        <div className="pt-20 pl-5">
+        <div className="pt-24 pl-5">
             {nav === 0 ?
-                <PersonalAccounts/>
-                : <></>
+                <PersonalAccounts/> :
+            nav === 3 ? 
+                <Settings/> : <></>
             }
         </div>
     )

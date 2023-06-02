@@ -24,3 +24,19 @@ export const reqLogin = async (userData: { email: String; password: String; }) =
         return {type: 'FAIL'}
     }
 }
+
+export const getIconUrl = async (url: string) => {
+    try {
+        const response = await fetch(`https://besticon-demo.herokuapp.com/allicons.json?url=${url}`, {
+            method: 'GET'
+        })
+        let responseValue = await response.json()
+        if (!responseValue.icons.length) {
+            return undefined
+        }
+        return responseValue.icons[0]?.url
+    } catch (err) {
+        console.log(`ERROR: ${err}`)
+        return undefined
+    }
+}
