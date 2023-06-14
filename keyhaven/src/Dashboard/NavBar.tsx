@@ -15,7 +15,7 @@ export const NavBar = ({nav, setNav}: NavBarProps) => {
 
     return (
         <>
-            <div className="flex flex-col h-screen bg-gray-100 w-60 pt-36 transition-all">
+            <div className="flex flex-col h-screen bg-gray-100 pt-36 transition-all" style={{width: '13vw'}}>
                 <div
                 className={showDropdown ? "text-xl p-5 flex justify-between bg-gray-200 hover:cursor-pointer" : "text-xl p-5 flex justify-between hover:bg-gray-200 duration-200 hover:cursor-pointer"}
                 onClick={() => setShowDropdown(!showDropdown)}

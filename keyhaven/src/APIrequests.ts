@@ -41,7 +41,7 @@ export const getIconUrl = async (url: string) => {
     }
 }
 
-export const sendEmail = async(requestData: {receiverID: string, title: string, content: string}) => {
+export const sendEmail = async(requestData: {receiverID: string, title: string, content: string, type: string}) => {
     try {
         const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/email`, {
             headers: {'Content-Type':'application/json'},
@@ -57,4 +57,32 @@ export const sendEmail = async(requestData: {receiverID: string, title: string, 
         console.error(`ERROR: ${err}`)
         return {type: 'FAIL'}
     }
+}
+
+interface getAccount {
+    email: string
+}
+
+interface postAccount {
+    
+}
+
+export const Account = {
+    get: async (params: getAccount) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/${params.email}`, {
+            headers: {'Content-Type':'application/json'},
+            method: "GET"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return responseValue.value
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    put: (account: postAccount) => {}
 }

@@ -201,7 +201,11 @@ app.post('/email', async (req, res) => {
             from: 'saccomander@gmail.com',
             to: req.body.receiverID,
             subject: req.body.title,
-            html: `<h3 style="color: blue;">${req.body.content}</h3>`
+            html: req.body.type === 'general' ?
+                    `<h3 style="color: blue;">${req.body.content}</h3>` :
+                    req.body.type === 'verifyAccount' ?
+                    `<h3 style="color: green;">${req.body.content}</h3>`
+                    : ``
         };
         transporter.sendMail(mailOptions, function(error, info){
             if (error) {
@@ -214,4 +218,27 @@ app.post('/email', async (req, res) => {
     } catch (err) {
         res.status(500).send(err)
     }
+})
+
+
+// ACCOUNT
+
+app.get('/account/:email', async (req, res) => {
+    try {
+        const email = req.params.email
+        const results = await client.query(`SELECT * FROM accounts WHERE email = '${email}';`);
+        let response
+        if (!results.rowCount) {
+            response = responses('account not found', 404)
+        } else {
+            response = responses('success-value', results.rows[0])
+        }
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
+app.put('/account', async(req, res) => {
+    // add here
 })

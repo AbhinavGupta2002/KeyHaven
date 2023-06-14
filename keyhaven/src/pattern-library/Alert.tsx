@@ -7,7 +7,8 @@ import { RxCross1 } from 'react-icons/rx'
 
 type MyAlertProps = {
     isVisible: boolean,
-    setInvisible: Function
+    setInvisible: Function,
+    content: string
 }
 
 export const MyAlert = (props: MyAlertProps) => {
@@ -30,7 +31,7 @@ export const MyAlert = (props: MyAlertProps) => {
             }
             sx={{ mb: 2, width: '30rem' }}
         >
-            An email has been sent to you to change the password!
+            {props.content}
         </Alert>
     </Collapse>
   );

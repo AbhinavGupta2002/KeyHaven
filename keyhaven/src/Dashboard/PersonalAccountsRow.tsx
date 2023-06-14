@@ -1,4 +1,4 @@
-import { Link, TableCell, TableRow, Tooltip } from "@mui/material";
+import { Link, Skeleton, TableCell, TableRow, Tooltip } from "@mui/material";
 import React, { useState } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -18,31 +18,46 @@ export const PersonalAccountsRow = (props: PersonalAccountsRowProps) => {
     const [showPassword, setShowPassword] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [showEditDialog, setShowEditDialog] = useState(false)
+    const [isDataLoaded, setIsDataLoaded] = useState(true)
 
     return (
         <TableRow key={props.data.title}>
             <TableCell component="th" scope="data">
                 <div className="w-16 h-12">
-                    <img src={props.data.iconUrl} className="w-16 h-12 object-contain"/>
+                    {isDataLoaded ?
+                        <img src={props.data.iconUrl} className="w-16 h-12 object-contain"/> :
+                        <Skeleton animation="wave" height={50}/>
+                    }
                 </div>
             </TableCell>
             <TableCell component="th" scope="data">
-                {props.data.title}
+                {isDataLoaded ?
+                    props.data.title :
+                    <Skeleton animation="wave" width={80}/>
+                }
             </TableCell>
-            <TableCell style={{ width: 400 }} align="right">
-                {props.data.username}
+            <TableCell style={{ width: 400}} align="right">
+                {isDataLoaded ?
+                    props.data.username :
+                    <Skeleton animation="wave" width={80} sx={{marginLeft: 'auto'}}/>
+                }
             </TableCell>
             <TableCell style={{ width: 450 }} align="right">
-                {showPassword ?
+                {isDataLoaded ?
+                    showPassword ?
                     props.data.password :
                     <div className="w-20 h-5 bg-gray-300 float-right rounded-md"></div>
+                    : <Skeleton animation="wave" width={80} sx={{marginLeft: 'auto'}}/>
                 }
             </TableCell>
             <TableCell style={{ width: 450 }} align="right">
                 <div>
-                    <a href={props.data.url} target="_blank" className="hover:underline hover:underline-offset-2 hover:font-bold hover:cursor-pointer w-fit float-right">
-                        {props.data.url}
-                    </a>
+                    {isDataLoaded ?
+                        <a href={props.data.url} target="_blank" className="hover:underline hover:underline-offset-2 hover:font-bold hover:cursor-pointer w-fit float-right">
+                            {props.data.url}
+                        </a> :
+                        <Skeleton animation="wave" width={80} sx={{marginLeft: 'auto'}}/>
+                    }
                 </div>
             </TableCell>
             <TableCell style={{ width: 200 }} align="right">
@@ -62,7 +77,7 @@ export const PersonalAccountsRow = (props: PersonalAccountsRowProps) => {
                     },
                 }}
                 >
-                <div className='cursor-pointer rounded-lg hover:bg-default1 hover:text-white p-1' onClick={() => setShowPassword(!showPassword)}>
+                <div className={`rounded-lg p-1 ${isDataLoaded ? 'hover:bg-default1 hover:text-white cursor-pointer' : ''}`} onClick={() => isDataLoaded && setShowPassword(!showPassword)}>
                     {showPassword ? <AiFillEyeInvisible className='w-4 h-4'/> : <AiFillEye className='w-4 h-4'/>}
                 </div>
                 </Tooltip>
@@ -81,7 +96,7 @@ export const PersonalAccountsRow = (props: PersonalAccountsRowProps) => {
                     },
                 }}
                 >
-                <div className='cursor-pointer rounded-lg hover:bg-default1 hover:text-white p-1' onClick={() => setShowEditDialog(true)}>
+                <div className={`rounded-lg p-1 ${isDataLoaded ? 'hover:bg-default1 hover:text-white cursor-pointer' : ''}`} onClick={() => isDataLoaded && setShowEditDialog(true)}>
                     <RiPencilFill className='w-4 h-4'/>
                 </div>
                 </Tooltip>
@@ -100,7 +115,7 @@ export const PersonalAccountsRow = (props: PersonalAccountsRowProps) => {
                     },
                 }}
                 >
-                <div className='cursor-pointer rounded-lg hover:bg-default1 hover:text-white p-1' onClick={() => setShowDeleteDialog(true)}>
+                <div className={`rounded-lg p-1 ${isDataLoaded ? 'hover:bg-default1 hover:text-white cursor-pointer' : ''}`} onClick={() => isDataLoaded && setShowDeleteDialog(true)}>
                     <BsFillTrashFill className='w-4 h-4'/>
                 </div>
                 </Tooltip>

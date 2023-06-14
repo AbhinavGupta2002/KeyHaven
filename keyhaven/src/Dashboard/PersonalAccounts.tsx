@@ -114,7 +114,7 @@ export default function PersonalAccounts() {
   ])
 
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   // Avoid a layout jump when reaching the last page with empty rows.
@@ -165,7 +165,7 @@ export default function PersonalAccounts() {
         <div>Add Account</div>
       </button>
       <TableContainer component={Paper}>
-        <Table sx={{ width: '100rem'}} aria-label="custom pagination table">
+        <Table sx={{ width: '83vw'}} aria-label="custom pagination table">
           <TableHead>
             <TableRow className='bg-gray-100'>
               <TableCell></TableCell>
