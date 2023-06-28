@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -33,6 +33,7 @@ export interface RowDataModel {
   password: string;
   url: string;
   iconUrl?: string;
+  isDataLoaded: boolean;
 }
 
 function TablePaginationActions(props: TablePaginationActionsProps) {
@@ -91,13 +92,13 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
   );
 }
 
-export function createRowData(title: string, username: string, password: string, url: string, iconUrl?: string): RowDataModel {
+export function createRowData(title: string, username: string, password: string, url: string, iconUrl?: string, isDataLoaded: boolean=true): RowDataModel {
   iconUrl = iconUrl ?? '/favicon.ico'
-  return { title, username, password, url, iconUrl }
+  return { title, username, password, url, iconUrl, isDataLoaded }
 }
 
-export default function PersonalAccounts() {
-  const [rows, setRows] = useState([
+export const PersonalAccounts = () => {
+  /*const [rows, setRows] = useState([
     createRowData('Cupcake', '305', '3.7', 'url1'),
     createRowData('Donut', '452', '25.0', 'url2'),
     createRowData('Eclair', '262', '16.0', 'url3'),
@@ -111,11 +112,13 @@ export default function PersonalAccounts() {
     createRowData('Marshmallow', '318', '0', 'url11'),
     createRowData('Nougat', '360', '19.0', 'url12'),
     createRowData('Oreo', '437', '18.0', 'url13'),
-  ])
+  ])*/
 
+  const [rows, setRows] = useState(Array(5).fill(createRowData('', '', '', '', '', false)))
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [isDataLoaded, setIsDataLoaded] = useState(false)
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
@@ -157,10 +160,31 @@ export default function PersonalAccounts() {
     setRows(newRows)
   }
 
+  useEffect(() => {
+    setTimeout(() => {
+      setRows([
+        createRowData('Cupcake', '305', '3.7', 'url1'),
+        createRowData('Donut', '452', '25.0', 'url2'),
+        createRowData('Eclair', '262', '16.0', 'url3'),
+        createRowData('Frozen yoghurt', '159', '6.0', 'url4'),
+        createRowData('Gingerbread', '356', '16.0', 'url5'),
+        createRowData('Honeycomb', '408', '3.2', 'url6'),
+        createRowData('Ice cream sandwich', '237', '9.0', 'url7'),
+        createRowData('Jelly Bean', '375', '0.0', 'url8'),
+        createRowData('KitKat', '518', '26.0', 'url9'),
+        createRowData('Lollipop', '392', '0.2', 'url10'),
+        createRowData('Marshmallow', '318', '0', 'url11'),
+        createRowData('Nougat', '360', '19.0', 'url12'),
+        createRowData('Oreo', '437', '18.0', 'url13')
+      ])
+      setIsDataLoaded(true)
+    }, 2000)
+  }, [isDataLoaded])
+
   return (
     <>
       <h1 className='text-2xl mb-6'>Personal Accounts</h1>
-      <button className='flex gap-3 hover:bg-default1 hover:text-white p-1 rounded-md ml-auto mb-2' onClick={() => setShowAddDialog(true)}>
+      <button className={`flex gap-3 p-1 rounded-md ml-auto mb-2 ${isDataLoaded ? 'cursor-pointer hover:bg-default1 hover:text-white' : 'cursor-default bg-gray-200 text-gray-500'}`} onClick={() => isDataLoaded && setShowAddDialog(true)}>
         <AiOutlinePlus className=' self-center'/>
         <div>Add Account</div>
       </button>
@@ -181,7 +205,7 @@ export default function PersonalAccounts() {
               ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : rows
             ).map((row) => (
-              <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData}/>
+              <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded}/>
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
@@ -217,3 +241,5 @@ export default function PersonalAccounts() {
     </>
   );
 }
+
+export default PersonalAccounts

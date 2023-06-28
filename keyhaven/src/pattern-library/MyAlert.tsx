@@ -1,6 +1,5 @@
 import * as React from 'react'
-import Box from '@mui/material/Box'
-import Alert from '@mui/material/Alert'
+import Alert, { AlertColor } from '@mui/material/Alert'
 import IconButton from '@mui/material/IconButton'
 import Collapse from '@mui/material/Collapse'
 import { RxCross1 } from 'react-icons/rx'
@@ -8,7 +7,8 @@ import { RxCross1 } from 'react-icons/rx'
 type MyAlertProps = {
     isVisible: boolean,
     setInvisible: Function,
-    content: string
+    content: string,
+    severity: AlertColor
 }
 
 export const MyAlert = (props: MyAlertProps) => {
@@ -16,7 +16,7 @@ export const MyAlert = (props: MyAlertProps) => {
   return (
     <Collapse in={props.isVisible}>
         <Alert
-            severity='info'
+            severity={props.severity}
             action={
             <IconButton
                 aria-label="close"
