@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "./Button";
 import { createRowData } from "../Dashboard/PersonalAccounts";
 import { InputField } from "./InputField";
-import { getIconUrl } from "../APIrequests";
+import { PasswordAccount, getIconUrl } from "../APIrequests";
 import { isValidUrl } from "../function-library";
 import { MyAlert } from "./MyAlert";
 
@@ -23,6 +23,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
     const [isEdited, setIsEdited] = useState(false)
     const [isNA, setIsNA] = useState(false)
     const [IsVisibleAlert, setIsVisibleAlert] = useState(false)
+    const [isUpdating, setIsUpdating] = useState(false)
 
     const clearInputs = () => {
         setTitle('')
@@ -33,6 +34,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
         isNA && setIsNA(false)
         isEdited && setIsEdited(false)
         IsVisibleAlert && setIsVisibleAlert(false)
+        isUpdating && setIsUpdating(false)
     }
 
     const setEdit = () => {
@@ -40,6 +42,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
     }
 
     const updateIconUrl = async () => {
+        url.length &&
         Promise.resolve(getIconUrl(url)).then(res => {
             if (res) {
                 setIconUrl(res)
@@ -55,11 +58,20 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
 
     useEffect(() => {
         setEdit()
-    })
+    }, [title, username, password, url])
 
     useEffect(() => {
         updateIconUrl()
     }, [url])
+
+    useEffect(() => {
+        isUpdating &&
+        PasswordAccount.post({title, username, password, url, iconUrl, email: 'saccomander@gmail.com'}).then(res => {
+            props.updateData(createRowData(title, username, password, url, iconUrl))
+            props.confirmAction()
+            clearInputs()
+        })
+    }, [isUpdating])
 
     return (
         <>
@@ -88,21 +100,20 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
                 <DialogContent className="flex gap-12 justify-center">
                     <Button
                         value='Cancel'
+                        disabled={isUpdating}
                         action={() => {
                             props.cancelAction()
                             clearInputs()
                         }}/>
                     <Button
                         value='Confirm'
-                        disabled={isEdited}
+                        disabled={isEdited || isUpdating}
                         action={() => {
                             if (!isValidForm()) {
                                 setIsVisibleAlert(true)
                                 return
                             }
-                            props.updateData(createRowData(title, username, password, url, iconUrl))
-                            props.confirmAction()
-                            clearInputs()
+                            setIsUpdating(true)
                         }}/>
                 </DialogContent>
             </Dialog>

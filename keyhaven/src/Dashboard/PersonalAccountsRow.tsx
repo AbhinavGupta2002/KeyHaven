@@ -122,7 +122,7 @@ export const PersonalAccountsRow = (props: PersonalAccountsRowProps) => {
             </div>
             </TableCell>
             <DeleteDialog
-                isVisible={showDeleteDialog} cancelAction={() => setShowDeleteDialog(false)}
+                title={props.data.title} isVisible={showDeleteDialog} cancelAction={() => setShowDeleteDialog(false)}
                 confirmAction={() => {
                     props.deleteData(props.data.title)
                     setShowDeleteDialog(false)

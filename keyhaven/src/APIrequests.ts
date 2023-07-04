@@ -59,6 +59,7 @@ export const sendEmail = async(requestData: {receiverID: string, title: string, 
     }
 }
 
+// Account is a user's account
 interface getAccount {
     email: string
 }
@@ -84,5 +85,77 @@ export const Account = {
             return {type: 'FAIL'}
         }
     },
-    put: (account: postAccount) => {}
+    put: (params: postAccount) => {}
+}
+
+// PasswordAccount is the account for a key
+interface getPasswordAccount {
+    email: string
+}
+
+interface postPasswordAccount {
+    email: string;
+    title: string;
+    username: string;
+    password: string;
+    url: string;
+    iconUrl: string;
+}
+
+interface deletePasswordAccount {
+    email: string,
+    title: string
+}
+
+export const PasswordAccount = {
+    getAll: async (params: getPasswordAccount) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount/${params.email}`, {
+            headers: {'Content-Type':'application/json'},
+            method: "GET"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return responseValue.value
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    post: async (account: postPasswordAccount) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount`, {
+            headers: {'Content-Type':'application/json'},
+            method: "POST",
+            body: JSON.stringify(account)
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return responseValue.value
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    put: (params: postPasswordAccount) => {},
+    delete: async (params: deletePasswordAccount) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount/${params.email}/${params.title}`, {
+            headers: {'Content-Type':'application/json'},
+            method: "DELETE"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return responseValue.value
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    }
 }

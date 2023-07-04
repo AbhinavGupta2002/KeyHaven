@@ -16,6 +16,7 @@ import { TableHead, Tooltip } from '@mui/material';
 import { AiOutlinePlus, AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 import { PersonalAccountsRow } from './PersonalAccountsRow';
 import { AddAccountDialog } from '../pattern-library/AddAccountDialog';
+import { PasswordAccount } from '../APIrequests';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -98,22 +99,6 @@ export function createRowData(title: string, username: string, password: string,
 }
 
 export const PersonalAccounts = () => {
-  /*const [rows, setRows] = useState([
-    createRowData('Cupcake', '305', '3.7', 'url1'),
-    createRowData('Donut', '452', '25.0', 'url2'),
-    createRowData('Eclair', '262', '16.0', 'url3'),
-    createRowData('Frozen yoghurt', '159', '6.0', 'url4'),
-    createRowData('Gingerbread', '356', '16.0', 'url5'),
-    createRowData('Honeycomb', '408', '3.2', 'url6'),
-    createRowData('Ice cream sandwich', '237', '9.0', 'url7'),
-    createRowData('Jelly Bean', '375', '0.0', 'url8'),
-    createRowData('KitKat', '518', '26.0', 'url9'),
-    createRowData('Lollipop', '392', '0.2', 'url10'),
-    createRowData('Marshmallow', '318', '0', 'url11'),
-    createRowData('Nougat', '360', '19.0', 'url12'),
-    createRowData('Oreo', '437', '18.0', 'url13'),
-  ])*/
-
   const [rows, setRows] = useState(Array(5).fill(createRowData('', '', '', '', '', false)))
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -161,24 +146,12 @@ export const PersonalAccounts = () => {
   }
 
   useEffect(() => {
-    setTimeout(() => {
-      setRows([
-        createRowData('Cupcake', '305', '3.7', 'url1'),
-        createRowData('Donut', '452', '25.0', 'url2'),
-        createRowData('Eclair', '262', '16.0', 'url3'),
-        createRowData('Frozen yoghurt', '159', '6.0', 'url4'),
-        createRowData('Gingerbread', '356', '16.0', 'url5'),
-        createRowData('Honeycomb', '408', '3.2', 'url6'),
-        createRowData('Ice cream sandwich', '237', '9.0', 'url7'),
-        createRowData('Jelly Bean', '375', '0.0', 'url8'),
-        createRowData('KitKat', '518', '26.0', 'url9'),
-        createRowData('Lollipop', '392', '0.2', 'url10'),
-        createRowData('Marshmallow', '318', '0', 'url11'),
-        createRowData('Nougat', '360', '19.0', 'url12'),
-        createRowData('Oreo', '437', '18.0', 'url13')
-      ])
+      PasswordAccount.getAll({email: 'saccomander@gmail.com'}).then(res => { // change email later
+      const tempRows: RowDataModel[] = []
+      res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
+      setRows(tempRows)
       setIsDataLoaded(true)
-    }, 2000)
+    })
   }, [isDataLoaded])
 
   return (

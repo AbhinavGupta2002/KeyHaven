@@ -242,3 +242,38 @@ app.get('/account/:email', async (req, res) => {
 app.put('/account', async(req, res) => {
     // add here
 })
+
+// PASSWORD-ACCOUNT
+
+app.get('/passwordAccount/:email', async (req, res) => {
+    try {
+        const email = req.params.email
+        const results = await client.query(`SELECT * FROM passwords WHERE '${email}' = ANY (emails);`);
+        const response = responses('success-value', results.rows)
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
+app.post('/passwordAccount', async (req, res) => {
+    try {
+        await client.query(
+            `INSERT INTO passwords (title, url, icon_url, emails, password, updated, username, updated_by) VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${req.body.email}'], '${req.body.password}', CURRENT_TIMESTAMP, '${req.body.username}', '${req.body.email}');`
+        )
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
+app.delete('/passwordAccount/:email/:title', async (req, res) => {
+    try {
+        await client.query(`DELETE FROM passwords WHERE '${req.params.email}' = ANY (emails) AND title = '${req.params.title}'`)
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})

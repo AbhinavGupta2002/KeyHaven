@@ -49,6 +49,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
     }
 
     const updateIconUrl = async () => {
+        url.length &&
         Promise.resolve(getIconUrl(url)).then(res => {
             if (res) {
                 setIconUrl(res)
