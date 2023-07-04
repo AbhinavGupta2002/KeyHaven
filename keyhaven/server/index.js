@@ -256,10 +256,26 @@ app.get('/passwordAccount/:email', async (req, res) => {
     }
 })
 
-app.post('/passwordAccount', async (req, res) => {
+app.post('/passwordAccount/:email', async (req, res) => {
     try {
         await client.query(
-            `INSERT INTO passwords (title, url, icon_url, emails, password, updated, username, updated_by) VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${req.body.email}'], '${req.body.password}', CURRENT_TIMESTAMP, '${req.body.username}', '${req.body.email}');`
+            `INSERT INTO passwords
+             (title, url, icon_url, emails, password, updated, username, updated_by)
+             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${req.params.email}'], '${req.body.password}', CURRENT_TIMESTAMP, '${req.body.username}', '${req.params.email}');`
+        )
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
+app.put('/passwordAccount/:email', async (req, res) => {
+    try {
+        await client.query(
+            `UPDATE passwords
+             SET title = '${req.body.title}', username = '${req.body.username}', password = '${req.body.password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = CURRENT_TIMESTAMP, updated_by = '${req.params.email}'
+             WHERE '${req.params.email}' = ANY (emails) AND title = '${req.body.prevTitle}';`
         )
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -270,7 +286,7 @@ app.post('/passwordAccount', async (req, res) => {
 
 app.delete('/passwordAccount/:email/:title', async (req, res) => {
     try {
-        await client.query(`DELETE FROM passwords WHERE '${req.params.email}' = ANY (emails) AND title = '${req.params.title}'`)
+        await client.query(`DELETE FROM passwords WHERE '${req.params.email}' = ANY (emails) AND title = '${req.params.title}';`)
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch (err) {

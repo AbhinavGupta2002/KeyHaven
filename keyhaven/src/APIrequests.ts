@@ -94,8 +94,16 @@ interface getPasswordAccount {
 }
 
 interface postPasswordAccount {
-    email: string;
     title: string;
+    username: string;
+    password: string;
+    url: string;
+    iconUrl: string;
+}
+
+interface putPasswordAccount {
+    title: string;
+    prevTitle: string;
     username: string;
     password: string;
     url: string;
@@ -124,9 +132,9 @@ export const PasswordAccount = {
             return {type: 'FAIL'}
         }
     },
-    post: async (account: postPasswordAccount) => {
+    post: async (account: postPasswordAccount, email: string) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount`, {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount/${email}`, {
             headers: {'Content-Type':'application/json'},
             method: "POST",
             body: JSON.stringify(account)
@@ -141,7 +149,23 @@ export const PasswordAccount = {
             return {type: 'FAIL'}
         }
     },
-    put: (params: postPasswordAccount) => {},
+    put: async (account: putPasswordAccount, email: string) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount/${email}`, {
+            headers: {'Content-Type':'application/json'},
+            method: "PUT",
+            body: JSON.stringify(account)
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return responseValue.value
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
     delete: async (params: deletePasswordAccount) => {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount/${params.email}/${params.title}`, {

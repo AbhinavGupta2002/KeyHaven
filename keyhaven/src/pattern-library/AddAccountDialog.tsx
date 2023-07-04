@@ -66,7 +66,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
 
     useEffect(() => {
         isUpdating &&
-        PasswordAccount.post({title, username, password, url, iconUrl, email: 'saccomander@gmail.com'}).then(res => {
+        PasswordAccount.post({title, username, password, url, iconUrl}, 'saccomander@gmail.com').then(res => { // change email later
             props.updateData(createRowData(title, username, password, url, iconUrl))
             props.confirmAction()
             clearInputs()

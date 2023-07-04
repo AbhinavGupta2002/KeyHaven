@@ -6,7 +6,7 @@ import { RowDataModel, createRowData } from "../Dashboard/PersonalAccounts";
 import { InputField } from "./InputField";
 import { isValidUrl } from "../function-library";
 import { MyAlert } from "./MyAlert";
-import { getIconUrl } from "../APIrequests";
+import { PasswordAccount, getIconUrl } from "../APIrequests";
 
 type EditAccountDialogProps = {
     isVisible: boolean,
@@ -25,7 +25,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
     const [isEdited, setIsEdited] = useState(false)
     const [isNA, setIsNA] = useState(props.data.username.length === 0)
     const [IsVisibleAlert, setIsVisibleAlert] = useState(false)
-
+    const [isUpdating, setIsUpdating] = useState(false)
 
     const resetInputs = () => {
         setTitle(props.data.title)
@@ -35,6 +35,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
         setIsNA(props.data.username.length === 0)
         isEdited && setIsEdited(false)
         IsVisibleAlert && setIsVisibleAlert(false)
+        isUpdating && setIsUpdating(false)
     }
 
     const setEdit = () => {
@@ -61,11 +62,21 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
 
     useEffect(() => {
         setEdit()
-    })
+    }, [title, username, password, url])
 
     useEffect(() => {
         updateIconUrl()
     }, [url])
+
+    useEffect(() => {
+        isUpdating &&
+        PasswordAccount.put({title, prevTitle: props.data.title, username, password, url, iconUrl: iconUrl ?? ''}, 'saccomander@gmail.com').then(res => { // change email later
+            props.confirmAction()
+            props.updateData(props.data.title, createRowData(title, username, password, url, iconUrl))
+            setIsEdited(false)
+            setIsUpdating(false)
+        })
+    }, [isUpdating])
 
     return (
         <>
@@ -94,22 +105,20 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
                 <DialogContent className="flex gap-12 justify-center">
                     <Button
                         value='Cancel'
+                        disabled={isUpdating}
                         action={() => {
                             props.cancelAction()
                             resetInputs()
                         }}/>
                     <Button
                         value='Confirm'
-                        disabled={isEdited}
+                        disabled={isEdited || isUpdating}
                         action={() => {
-                            console.log(isValidUrl(url), url)
                             if (!isValidForm()) {
                                 setIsVisibleAlert(true)
                                 return
                             }
-                            props.confirmAction()
-                            props.updateData(props.data.title, createRowData(title, username, password, url, iconUrl))
-                            setIsEdited(false)
+                            setIsUpdating(true)
                         }}/>
                 </DialogContent>
             </Dialog>
