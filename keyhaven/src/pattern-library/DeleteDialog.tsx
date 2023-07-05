@@ -15,7 +15,7 @@ export const DeleteDialog = (props: DeleteDialogProps) => {
 
     useEffect(() => {
         if (isDeleting) {
-            PasswordAccount.delete({email: 'saccomander@gmail.com', title: props.title}).then(res => {
+            PasswordAccount.delete({title: props.title}).then(res => {
                 props.confirmAction()
                 setIsDeleting(false)
             })

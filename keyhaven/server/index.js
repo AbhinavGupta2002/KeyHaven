@@ -2,21 +2,25 @@ const express = require('express')
 const cors = require('cors')
 const pg = require('pg')
 const tables = require('./tables.js')
-const responses = require('./responses.js')
+const {responses, emailContentBuilder} = require('./functionLibrary.js')
 const dotenv = require('dotenv')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const scheduler = require('node-schedule')
 const mailer = require('nodemailer')
+const cookieParser = require('cookie-parser')
+const Cookies = require('universal-cookie')
 
 const app = express()
 dotenv.config()
 const connectionString = process.env.CONNECTION_STRING
 
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({}));
 
 let client = new pg.Client(connectionString)
+const cookieManager = new Cookies()
 
 client.connect(function(err) {
     if(err) {
@@ -55,8 +59,8 @@ scheduler.scheduleJob('0 0 * * *', async () => { // runs once every day at 12 am
 })
 
 const authorizeUser = (req, res, next) => {
-    const authHeader = req.headers['authorization']
-    const bearerToken = authHeader && authHeader.split(' ')[1]
+    const bearerToken = cookieManager.get('keyHavenBearerToken') || null
+
     if (!bearerToken) {
         const response = responses('bearer token missing')
         return res.status(response.code).send(response.body)
@@ -109,7 +113,6 @@ app.get('/test1', authorizeUser, async (req, res) => {
         console.log(err);
     }
 });
-
 
 // adds a new row of data to circles table
 app.post('/test2', async (req, res) => {
@@ -177,9 +180,12 @@ app.post('/login', async (req, res) => {
         if (isValidEmail.rows.length) {
             const isValidPassword = await bcrypt.compare(`${req.body.password}`, `${isValidEmail.rows[0].password}`)
             if (isValidPassword) {
-                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '20s'})
-                const response = responses('success-value', bearerToken)
-                res.status(response.code).send(response.body)
+                const response = responses('success-default')
+
+                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
+                cookieManager.set("keyHavenBearerToken", bearerToken, {httpOnly: true})
+
+                res.status(response.code).send(response.body);
             } else {
                 throw(responses('invalid credentials'))
             }
@@ -195,17 +201,23 @@ app.post('/login', async (req, res) => {
     }
 })
 
+app.post('/logout', async (req, res) => {
+    try {
+        cookieManager.remove('keyHavenBearerToken')
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
 app.post('/email', async (req, res) => {
     try {
         const mailOptions = {
             from: 'saccomander@gmail.com',
             to: req.body.receiverID,
-            subject: req.body.title,
-            html: req.body.type === 'general' ?
-                    `<h3 style="color: blue;">${req.body.content}</h3>` :
-                    req.body.type === 'verifyAccount' ?
-                    `<h3 style="color: green;">${req.body.content}</h3>`
-                    : ``
+            subject: `KeyHaven: ${req.body.title}`,
+            html: emailContentBuilder(req.body)
         };
         transporter.sendMail(mailOptions, function(error, info){
             if (error) {
@@ -223,10 +235,10 @@ app.post('/email', async (req, res) => {
 
 // ACCOUNT
 
-app.get('/account/:email', async (req, res) => {
+app.get('/account', authorizeUser, async (req, res) => {
     try {
-        const email = req.params.email
-        const results = await client.query(`SELECT * FROM accounts WHERE email = '${email}';`);
+        const email = req.user.email
+        const results = await client.query(`SELECT first_name, last_name, email, is_verified, joined, profile_image_url FROM accounts WHERE email = '${email}';`);
         let response
         if (!results.rowCount) {
             response = responses('account not found', 404)
@@ -239,16 +251,23 @@ app.get('/account/:email', async (req, res) => {
     }
 })
 
-app.put('/account', async(req, res) => {
-    // add here
+app.put('/account', authorizeUser, async(req, res) => {
+    try {
+        const email = req.user.email
+        await client.query(`UPDATE accounts SET first_name = '${req.body.firstName}', last_name = '${req.body.lastName}' WHERE email = '${email}';`);
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch(err) {
+        res.status(500).send(err)
+    }
 })
 
 // PASSWORD-ACCOUNT
 
-app.get('/passwordAccount/:email', async (req, res) => {
+app.get('/passwordAccount', authorizeUser, async (req, res) => {
     try {
-        const email = req.params.email
-        const results = await client.query(`SELECT * FROM passwords WHERE '${email}' = ANY (emails);`);
+        const email = req.user.email
+        const results = await client.query(`SELECT * FROM passwords WHERE '${email}' = ANY (emails) ORDER BY id;`);
         const response = responses('success-value', results.rows)
         res.status(response.code).send(response.body)
     } catch (err) {
@@ -256,12 +275,13 @@ app.get('/passwordAccount/:email', async (req, res) => {
     }
 })
 
-app.post('/passwordAccount/:email', async (req, res) => {
+app.post('/passwordAccount', authorizeUser, async (req, res) => {
     try {
+        const email = req.user.email
         await client.query(
             `INSERT INTO passwords
              (title, url, icon_url, emails, password, updated, username, updated_by)
-             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${req.params.email}'], '${req.body.password}', CURRENT_TIMESTAMP, '${req.body.username}', '${req.params.email}');`
+             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${email}'], '${req.body.password}', CURRENT_TIMESTAMP, '${req.body.username}', '${email}');`
         )
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -270,12 +290,13 @@ app.post('/passwordAccount/:email', async (req, res) => {
     }
 })
 
-app.put('/passwordAccount/:email', async (req, res) => {
+app.put('/passwordAccount', authorizeUser, async (req, res) => {
     try {
+        const email = req.user.email
         await client.query(
             `UPDATE passwords
-             SET title = '${req.body.title}', username = '${req.body.username}', password = '${req.body.password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = CURRENT_TIMESTAMP, updated_by = '${req.params.email}'
-             WHERE '${req.params.email}' = ANY (emails) AND title = '${req.body.prevTitle}';`
+             SET title = '${req.body.title}', username = '${req.body.username}', password = '${req.body.password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = CURRENT_TIMESTAMP, updated_by = '${email}'
+             WHERE '${email}' = ANY (emails) AND title = '${req.body.prevTitle}';`
         )
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -284,9 +305,10 @@ app.put('/passwordAccount/:email', async (req, res) => {
     }
 })
 
-app.delete('/passwordAccount/:email/:title', async (req, res) => {
+app.delete('/passwordAccount/:title', authorizeUser, async (req, res) => {
     try {
-        await client.query(`DELETE FROM passwords WHERE '${req.params.email}' = ANY (emails) AND title = '${req.params.title}';`)
+        const email = req.user.email
+        await client.query(`DELETE FROM passwords WHERE '${email}' = ANY (emails) AND title = '${req.params.title}';`)
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch (err) {

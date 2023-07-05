@@ -4,7 +4,7 @@ import { Button } from "./Button";
 
 import { RowDataModel, createRowData } from "../Dashboard/PersonalAccounts";
 import { InputField } from "./InputField";
-import { isValidUrl } from "../function-library";
+import { isValidUrl } from "../common-library";
 import { MyAlert } from "./MyAlert";
 import { PasswordAccount, getIconUrl } from "../APIrequests";
 
@@ -70,7 +70,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
 
     useEffect(() => {
         isUpdating &&
-        PasswordAccount.put({title, prevTitle: props.data.title, username, password, url, iconUrl: iconUrl ?? ''}, 'saccomander@gmail.com').then(res => { // change email later
+        PasswordAccount.put({title, prevTitle: props.data.title, username, password, url, iconUrl: iconUrl ?? ''}).then(res => {
             props.confirmAction()
             props.updateData(props.data.title, createRowData(title, username, password, url, iconUrl))
             setIsEdited(false)

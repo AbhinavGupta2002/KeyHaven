@@ -4,7 +4,7 @@ import { Button } from "./Button";
 import { createRowData } from "../Dashboard/PersonalAccounts";
 import { InputField } from "./InputField";
 import { PasswordAccount, getIconUrl } from "../APIrequests";
-import { isValidUrl } from "../function-library";
+import { isValidUrl } from "../common-library";
 import { MyAlert } from "./MyAlert";
 
 type AddAccountDialogProps = {
@@ -66,7 +66,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
 
     useEffect(() => {
         isUpdating &&
-        PasswordAccount.post({title, username, password, url, iconUrl}, 'saccomander@gmail.com').then(res => { // change email later
+        PasswordAccount.post({title, username, password, url, iconUrl}).then(res => {
             props.updateData(createRowData(title, username, password, url, iconUrl))
             props.confirmAction()
             clearInputs()

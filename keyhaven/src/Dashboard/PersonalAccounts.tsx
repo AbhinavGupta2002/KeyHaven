@@ -146,7 +146,7 @@ export const PersonalAccounts = () => {
   }
 
   useEffect(() => {
-      PasswordAccount.getAll({email: 'saccomander@gmail.com'}).then(res => { // change email later
+      PasswordAccount.getAll().then(res => { // change email later
       const tempRows: RowDataModel[] = []
       res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
       setRows(tempRows)

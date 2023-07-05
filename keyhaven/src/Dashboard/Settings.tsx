@@ -9,6 +9,8 @@ import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { MyAlert } from "../pattern-library/MyAlert";
 import { Account, sendEmail } from "../APIrequests";
 import { Skeleton, Tooltip } from "@mui/material";
+import { Loader } from "../pattern-library/Loader";
+import { EmailType } from "../common-library";
 
 interface Account {
     first_name: string,
@@ -36,6 +38,8 @@ export const Settings = () => {
     const [showPassAlert, setShowPassAlert] = useState(false)
     const [showVerifyAlert, setShowVerifyAlert] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [isUpdating1, setIsUpdating1] = useState(false)
+    const [isUpdating2, setIsUpdating2] = useState(false)
     const [profileURL, setProfileURL] = useState('')
     const [email, setEmail] = useState('')
     const [dateJoined, setDateJoined] = useState('')
@@ -55,30 +59,26 @@ export const Settings = () => {
     useEffect(() => {isEditLastName && setPrevLastName(lastName)}, [isEditLastName])
     useEffect(() => {
         if (showVerifyAlert) {
-            const req = {
-                receiverID: 'abhinavgupta1882002@gmail.com',
-                title: 'KeyHaven: Request to Verify Account',
-                content: 'Please click the following link to verify your account. If you did not request this, contact customer support immediately',
-                type: 'verifyAccount'
-            }
-            sendEmail(req)
+            sendEmail(EmailType.verifyEmail(email, firstName))
         }
     }, [showVerifyAlert])
     useEffect(() => {
+        if (isUpdating1 || isUpdating2) {
+            Account.put({firstName, lastName}).then(res => {
+                setIsUpdating1(false)
+                setIsUpdating2(false)
+            })
+        }
+    }, [isUpdating1, isUpdating2])
+    useEffect(() => {
         if (isLoading) {
-            const reqAccount = Account.get({email: 'saccomander@gmail.com'})
+            const reqAccount = Account.get()
             Promise.resolve(reqAccount).then(res => {
                 setAccountDetails(res)
             })
         }
         if (showPassAlert) {
-            const req = {
-                receiverID: 'abhinavgupta1882002@gmail.com',
-                title: 'KeyHaven: Request to Change Master Password',
-                content: 'Please click the following link to change your master password for the account linked to this email. If you did not request this, contact customer support immediately',
-                type: 'general'
-            }
-            sendEmail(req)
+            sendEmail(EmailType.changeMasterPassword(email, firstName))
         }
     }, [showPassAlert, isLoading])
 
@@ -103,9 +103,11 @@ export const Settings = () => {
                             <></> :
                             isEditFirstName ?
                                 <div className="flex gap-3 text-2xl">
-                                    <GoCheck className="cursor-pointer text-green-700" onClick={() => setIsEditFirstName(false)}/>
+                                    <GoCheck className="cursor-pointer text-green-700" onClick={() => {setIsUpdating1(true); setIsEditFirstName(false);}}/>
                                     <RxCross2 className="cursor-pointer text-red-700" onClick={() => {setIsEditFirstName(false); setFirstName(prevFirstName);}}/>
                                 </div> :
+                                isUpdating1 ?
+                                <Loader/> :
                                 <FiEdit className="self-center cursor-pointer" onClick={() => setIsEditFirstName(!isEditFirstName)}/>
                         }
                     </div>
@@ -123,9 +125,11 @@ export const Settings = () => {
                             <></> :
                             isEditLastName ?
                                 <div className="flex gap-3 text-2xl">
-                                    <GoCheck className="cursor-pointer text-green-700" onClick={() => setIsEditLastName(false)}/>
+                                    <GoCheck className="cursor-pointer text-green-700" onClick={() => {setIsUpdating2(true); setIsEditLastName(false);}}/>
                                     <RxCross2 className="cursor-pointer text-red-700" onClick={() => {setIsEditLastName(false); setLastName(prevLastName);}}/>
                                 </div> :
+                                isUpdating2 ?
+                                <Loader/> :
                                 <FiEdit className="self-center cursor-pointer" onClick={() => setIsEditLastName(true)}/>
                         }
                     </div>
@@ -192,13 +196,3 @@ export const Settings = () => {
         </>
     )
 }
-
-/*
-    profile image (default img should exist)
-    first name (empty as default)
-    last name (empty as default)
-    [default full name is 'user']
-    email (cannot change)
-    master password (through OTP)
-    delete account (dialog for confirmation and warning)
-*/
