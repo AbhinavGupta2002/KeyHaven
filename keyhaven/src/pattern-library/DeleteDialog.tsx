@@ -16,7 +16,7 @@ export const DeleteDialog = (props: DeleteDialogProps) => {
     useEffect(() => {
         if (isDeleting) {
             PasswordAccount.delete({title: props.title}).then(res => {
-                props.confirmAction()
+                res.type === 'SUCCESS' ? props.confirmAction() : props.cancelAction()
                 setIsDeleting(false)
             })
         }

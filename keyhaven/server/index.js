@@ -10,6 +10,7 @@ const scheduler = require('node-schedule')
 const mailer = require('nodemailer')
 const cookieParser = require('cookie-parser')
 const Cookies = require('universal-cookie')
+const crypto = require('crypto')
 
 const app = express()
 dotenv.config()
@@ -21,6 +22,7 @@ app.use(cors({}));
 
 let client = new pg.Client(connectionString)
 const cookieManager = new Cookies()
+const cryptoAlgorithm = 'aes-256-cbc';
 
 client.connect(function(err) {
     if(err) {
@@ -266,9 +268,42 @@ app.put('/account', authorizeUser, async(req, res) => {
 
 app.get('/passwordAccount', authorizeUser, async (req, res) => {
     try {
-        const email = req.user.email
-        const results = await client.query(`SELECT * FROM passwords WHERE '${email}' = ANY (emails) ORDER BY id;`);
-        const response = responses('success-value', results.rows)
+        const userEmail = req.user.email
+
+        const secretKeyResult = await client.query(`SELECT secret_key, iv FROM password_secrets WHERE email = '${userEmail}'`);
+        if (!secretKeyResult.rowCount) {
+            throw 'Internal Error'
+        }
+
+        const secretKeyUser = secretKeyResult.rows[0].secret_key
+        const ivUser = secretKeyResult.rows[0].iv
+        const results = await client.query(`SELECT * FROM passwords WHERE '${userEmail}' = ANY (emails) ORDER BY id;`);
+
+        let passAccounts = results.rows
+        for (const account of passAccounts) {
+            const ownerEmail = account.owned_by
+            let secretKey = secretKeyResult.rows[0].secret_key
+            let iv = secretKeyResult.rows[0].iv
+
+            if (ownerEmail === userEmail) {
+                secretKey = secretKeyUser
+                iv = ivUser
+            } else {
+                const secretKeyResult = await client.query(`SELECT secret_key, iv FROM password_secrets WHERE email = '${ownerEmail}'`);
+                if (!secretKeyResult.rowCount) {
+                    throw 'Internal Error'
+                }
+                secretKey = secretKeyResult.rows[0].secret_key
+                iv = secretKeyResult.rows[0].iv
+            }
+
+            // MORE OPTMIZATION: cache the users whose keys have been called from DB, including that of the current user
+
+            const decipher = crypto.createDecipheriv(cryptoAlgorithm, Buffer.from(secretKey, 'hex'), Buffer.from(iv, 'hex'))
+            account.password = decipher.update(account.password, 'hex', 'utf8') + decipher.final('utf8')
+        }
+
+        const response = responses('success-value', passAccounts)
         res.status(response.code).send(response.body)
     } catch (err) {
         res.status(500).send(err)
@@ -278,10 +313,20 @@ app.get('/passwordAccount', authorizeUser, async (req, res) => {
 app.post('/passwordAccount', authorizeUser, async (req, res) => {
     try {
         const email = req.user.email
+        const secretKeyResult = await client.query(`SELECT secret_key, iv FROM password_secrets WHERE email = '${email}'`);
+        if (!secretKeyResult.rowCount) {
+            throw 'Internal Error'
+        }
+
+        const secretKey = secretKeyResult.rows[0].secret_key
+        const iv = secretKeyResult.rows[0].iv
+        const cipher = crypto.createCipheriv(cryptoAlgorithm, Buffer.from(secretKey, 'hex'), Buffer.from(iv, 'hex'))
+        const password = cipher.update(req.body.password, 'utf8', 'hex') + cipher.final('hex')
+
         await client.query(
             `INSERT INTO passwords
-             (title, url, icon_url, emails, password, updated, username, updated_by)
-             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${email}'], '${req.body.password}', CURRENT_TIMESTAMP, '${req.body.username}', '${email}');`
+             (title, url, icon_url, emails, password, updated, username, updated_by, owned_by)
+             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${email}'], '${password}', CURRENT_TIMESTAMP, '${req.body.username}', '${email}', '${email}');`
         )
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -292,11 +337,29 @@ app.post('/passwordAccount', authorizeUser, async (req, res) => {
 
 app.put('/passwordAccount', authorizeUser, async (req, res) => {
     try {
-        const email = req.user.email
+        const userEmail = req.user.email
+
+        const ownerResult = await client.query(`SELECT owned_by FROM passwords WHERE '${userEmail}' = ANY (emails) AND title = '${req.body.prevTitle}'`);
+        if (!ownerResult.rowCount) {
+            throw 'Internal Error'
+        }
+
+        const ownerEmail = ownerResult.rows[0].owned_by
+
+        const secretKeyResult = await client.query(`SELECT secret_key, iv FROM password_secrets WHERE email = '${ownerEmail}'`);
+        if (!secretKeyResult.rowCount) {
+            throw 'Internal Error'
+        }
+
+        const secretKey = secretKeyResult.rows[0].secret_key
+        const iv = secretKeyResult.rows[0].iv
+        const cipher = crypto.createCipheriv(cryptoAlgorithm, Buffer.from(secretKey, 'hex'), Buffer.from(iv, 'hex'))
+        const password = cipher.update(req.body.password, 'utf8', 'hex') + cipher.final('hex')
+
         await client.query(
             `UPDATE passwords
-             SET title = '${req.body.title}', username = '${req.body.username}', password = '${req.body.password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = CURRENT_TIMESTAMP, updated_by = '${email}'
-             WHERE '${email}' = ANY (emails) AND title = '${req.body.prevTitle}';`
+             SET title = '${req.body.title}', username = '${req.body.username}', password = '${password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = CURRENT_TIMESTAMP, updated_by = '${userEmail}'
+             WHERE '${userEmail}' = ANY (emails) AND title = '${req.body.prevTitle}';`
         )
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -307,11 +370,28 @@ app.put('/passwordAccount', authorizeUser, async (req, res) => {
 
 app.delete('/passwordAccount/:title', authorizeUser, async (req, res) => {
     try {
-        const email = req.user.email
-        await client.query(`DELETE FROM passwords WHERE '${email}' = ANY (emails) AND title = '${req.params.title}';`)
+        const userEmail = req.user.email
+
+        const ownerResult = await client.query(`SELECT owned_by FROM passwords WHERE '${userEmail}' = ANY (emails) AND title = '${req.params.title}'`);
+        if (!ownerResult.rowCount) {
+            throw 'Internal Error'
+        }
+
+        const ownerEmail = ownerResult.rows[0].owned_by
+
+        if (ownerEmail !== userEmail) {
+            throw `Current user is not the password's owner`
+        }
+
+        await client.query(`DELETE FROM passwords WHERE '${userEmail}' = ANY (emails) AND title = '${req.params.title}';`)
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch (err) {
-        res.status(500).send(err)
+        res.status(500).send({type: 'FAIL', message: err})
     }
 })
+
+// In circles, a password has only one owner. The owner can:
+
+// 1. Restrict access - meaning if any value is changed by a shared user, they will need approval for the change by owner
+// 2. Have history log of specific changes (values not shown, only the fields) made by shared users and owner

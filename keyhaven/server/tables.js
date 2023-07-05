@@ -6,4 +6,6 @@ const circles = 'CREATE TABLE IF NOT EXISTS circles (id SERIAL NOT NULL PRIMARY 
 
 const refreshTokens = 'CREATE TABLE IF NOT EXISTS refresh_tokens (refresh_token TEXT PRIMARY KEY, expiry_date TIMESTAMP);'
 
-module.exports = {accounts: accounts, passwords: passwords, circles: circles, refreshTokens: refreshTokens}
+const passwordSecrets = 'CREATE TABLE IF NOT EXISTS password_secrets (email TEXT PRIMARY KEY, secret_key TEXT, FOREIGN KEY (email) REFERENCES accounts(email));';
+
+module.exports = {accounts: accounts, passwords: passwords, circles: circles, refreshTokens: refreshTokens, passwordSecrets: passwordSecrets}

@@ -90,10 +90,11 @@ export const Account = {
                 method: "GET"
             })
             const responseValue = await response.json()
-            console.log('resp here', responseValue, response.status)
+            //console.log('resp here', responseValue, response.status)
             if (responseValue.type === ('FAIL' || undefined)) {
                 throw responseValue.message
             }
+            console.log(responseValue.value, 'here')
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)
@@ -150,7 +151,7 @@ export const PasswordAccount = {
             })
             const responseValue = await response.json()
             if (response.status === 401) {
-                console.log(responseValue, 'here')
+                console.log(responseValue, '401 fix')
             }
             if (responseValue.type === ('FAIL' || undefined)) {
                 throw responseValue.message
@@ -206,7 +207,7 @@ export const PasswordAccount = {
             if (responseValue.type === ('FAIL' || undefined)) {
                 throw responseValue.message
             }
-            return responseValue.value
+            return {type: 'SUCCESS'}
         } catch (err) {
             console.error(`ERROR: ${err}`)
             return {type: 'FAIL'}

@@ -146,12 +146,14 @@ export const PersonalAccounts = () => {
   }
 
   useEffect(() => {
-      PasswordAccount.getAll().then(res => { // change email later
-      const tempRows: RowDataModel[] = []
-      res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
-      setRows(tempRows)
-      setIsDataLoaded(true)
-    })
+      if (!isDataLoaded) {
+        PasswordAccount.getAll().then(res => {
+          const tempRows: RowDataModel[] = []
+          res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
+          setRows(tempRows)
+          setIsDataLoaded(true)
+        })
+      }
   }, [isDataLoaded])
 
   return (
