@@ -145,6 +145,10 @@ export const PersonalAccounts = () => {
     setRows(newRows)
   }
 
+  const checkTitleIsUnique = (title: string): boolean => {
+    return !rows.some(row => row.title === title);
+  }
+
   useEffect(() => {
       if (!isDataLoaded) {
         PasswordAccount.getAll().then(res => {
@@ -180,7 +184,7 @@ export const PersonalAccounts = () => {
               ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               : rows
             ).map((row) => (
-              <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded}/>
+              <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded} checkTitleIsUnique={checkTitleIsUnique}/>
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
@@ -212,7 +216,8 @@ export const PersonalAccounts = () => {
       </TableContainer>
       <AddAccountDialog
         isVisible={showAddDialog} cancelAction={() => setShowAddDialog(false)}
-        confirmAction={() => setShowAddDialog(false)} updateData={handleAddRowData}/>
+        confirmAction={() => setShowAddDialog(false)} updateData={handleAddRowData}
+        checkTitleIsUnique={checkTitleIsUnique}/>
     </>
   );
 }

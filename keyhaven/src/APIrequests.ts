@@ -90,11 +90,9 @@ export const Account = {
                 method: "GET"
             })
             const responseValue = await response.json()
-            //console.log('resp here', responseValue, response.status)
             if (responseValue.type === ('FAIL' || undefined)) {
                 throw responseValue.message
             }
-            console.log(responseValue.value, 'here')
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)

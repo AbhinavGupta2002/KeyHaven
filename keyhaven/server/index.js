@@ -214,13 +214,31 @@ app.post('/logout', async (req, res) => {
 })
 
 app.post('/email', async (req, res) => {
+    console.log('check12')
     try {
+        if (req.body.type === 'verifyAccount') {
+            const result = await client.query(`SELECT is_verified FROM accounts WHERE email = '${req.body.receiverID}';`)
+            if (!result.rowCount) {
+                throw 'Internal Error'
+            }
+
+
+            if (result.rows[0].is_verified) {
+                throw 'User is already verified!'
+            }
+
+            const token = crypto.randomBytes(16).toString('hex')
+            req.body.emailVerifToken = token
+            await client.query(`UPDATE account_verif SET email_key = '${token}' WHERE email = '${req.body.receiverID}';`)
+        }
+
         const mailOptions = {
             from: 'saccomander@gmail.com',
             to: req.body.receiverID,
             subject: `KeyHaven: ${req.body.title}`,
             html: emailContentBuilder(req.body)
-        };
+        }
+
         transporter.sendMail(mailOptions, function(error, info){
             if (error) {
               throw(error);
@@ -228,7 +246,7 @@ app.post('/email', async (req, res) => {
                 const response = responses('success-default')
                 res.status(response.code).send(response.body)
             }
-        });
+        })
     } catch (err) {
         res.status(500).send(err)
     }
@@ -260,6 +278,30 @@ app.put('/account', authorizeUser, async(req, res) => {
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch(err) {
+        res.status(500).send(err)
+    }
+})
+
+// ACCOUNT VERIFICATION
+
+app.get('/verifyEmail/:email/:token', async (req, res) => {
+    try {
+        const email = req.params.email
+        const token = req.params.token
+        const result = await client.query(`SELECT email_key from account_verif WHERE email = '${email}'`);
+
+        if (!result.rowCount) {
+            throw 'Internal Error'
+        }
+        if (token !== result.rows[0].email_key) {
+            throw 'Email link is invalid'
+        }
+
+        Promise.all([client.query(`UPDATE account_verif SET email_key = '' WHERE email = '${email}';`), client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`)]).then(_ => {
+            const response = responses('success-value', 'Your account has been verified successfully! You can close this page now.')
+            res.status(response.code).send(response.body.value)
+        })
+    } catch (err) {
         res.status(500).send(err)
     }
 })

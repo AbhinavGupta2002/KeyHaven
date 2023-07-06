@@ -8,4 +8,6 @@ const refreshTokens = 'CREATE TABLE IF NOT EXISTS refresh_tokens (refresh_token 
 
 const passwordSecrets = 'CREATE TABLE IF NOT EXISTS password_secrets (email TEXT PRIMARY KEY, secret_key TEXT, FOREIGN KEY (email) REFERENCES accounts(email));';
 
-module.exports = {accounts: accounts, passwords: passwords, circles: circles, refreshTokens: refreshTokens, passwordSecrets: passwordSecrets}
+const emailVerifications = 'CREATE TABLE IF NOT EXISTS account_verif (email TEXT PRIMARY KEY, email_key TEXT, pass_key TEXT, FOREIGN KEY (email) REFERENCES accounts(email));'
+
+module.exports = {accounts, passwords, circles, refreshTokens, passwordSecrets, emailVerifications}

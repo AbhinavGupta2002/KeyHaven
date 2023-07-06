@@ -11,6 +11,7 @@ type AddAccountDialogProps = {
     isVisible: boolean,
     cancelAction: Function,
     confirmAction: Function,
+    checkTitleIsUnique: Function,
     updateData: Function
 }
 
@@ -53,7 +54,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
     }
 
     const isValidForm = (): boolean => {
-        return isValidUrl(url) && title.length !== 0 && password.length !== 0 && (username.length !== 0 || isNA)
+        return isValidUrl(url) && title.length !== 0 && password.length !== 0 && (username.length !== 0 || isNA) && props.checkTitleIsUnique(title)
     }
 
     useEffect(() => {

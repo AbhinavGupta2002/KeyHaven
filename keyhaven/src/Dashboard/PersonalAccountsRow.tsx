@@ -12,6 +12,7 @@ type PersonalAccountsRowProps = {
     data: RowDataModel,
     updateData: Function,
     deleteData: Function,
+    checkTitleIsUnique: Function,
     isDataLoaded: boolean
 }
 
@@ -130,7 +131,7 @@ export const PersonalAccountsRow = (props: PersonalAccountsRowProps) => {
             <EditAccountDialog
                 isVisible={showEditDialog} cancelAction={() => setShowEditDialog(false)}
                 confirmAction={() => setShowEditDialog(false)} data={props.data}
-                updateData={props.updateData}
+                updateData={props.updateData} checkTitleIsUnique={props.checkTitleIsUnique}
             />
         </TableRow>
     )

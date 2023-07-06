@@ -13,7 +13,8 @@ type EditAccountDialogProps = {
     cancelAction: Function,
     confirmAction: Function,
     data: RowDataModel,
-    updateData: Function
+    updateData: Function,
+    checkTitleIsUnique: Function
 }
 
 export const EditAccountDialog = (props: EditAccountDialogProps) => {
@@ -46,7 +47,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
     }
     
     const isValidForm = (): boolean => {
-        return isValidUrl(url) && title.length !== 0 && password.length !== 0 && (username.length !== 0 || isNA)
+        return isValidUrl(url) && title.length !== 0 && password.length !== 0 && (username.length !== 0 || isNA) && props.checkTitleIsUnique(title)
     }
 
     const updateIconUrl = async () => {

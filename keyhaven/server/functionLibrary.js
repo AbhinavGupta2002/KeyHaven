@@ -15,9 +15,9 @@ function responses(status, value=null) {
 function emailContentBuilder(body) {
     let builder = `<h3>Dear ${body.firstName},</h3><h3>${body.content}</h3>`
     if (body.type === 'general') {
-        builder += `${process.env.CLIENT_URL}/changePassword/...`
+        builder += `${process.env.SERVER_URL}/changePassword/${body.receiverID}/...`
     } else if (body.type === 'verifyAccount') {
-        builder += `${process.env.CLIENT_URL}/verifyEmail/...`
+        builder += `${process.env.SERVER_URL}/verifyEmail/${body.receiverID}/${body.emailVerifToken}`
     } else {
         builder += `<h3>This email was sent due to a technical difficulty from our side. Kindly visit our website and inform us about this.</h3>`
     }
