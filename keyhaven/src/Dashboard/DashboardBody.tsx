@@ -9,7 +9,7 @@ type DashboardBodyProps = {
 
 export const DashboardBody = ({nav}: DashboardBodyProps) => {
     return (
-        <div className="pt-24 pl-5">
+        <div className="pt-24 pl-5 w-full">
             {nav === 0 ?
                 <PersonalAccounts/> :
             nav === 3 ? 

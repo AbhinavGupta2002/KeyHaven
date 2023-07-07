@@ -23,7 +23,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
     const [password, setPassword] = useState(props.data.password)
     const [url, setUrl] = useState(props.data.url)
     const [iconUrl, setIconUrl] = useState(props.data.iconUrl)
-    const [isEdited, setIsEdited] = useState(false)
+    const [isStatic, setIsStatic] = useState(true)
     const [isNA, setIsNA] = useState(props.data.username.length === 0)
     const [IsVisibleAlert, setIsVisibleAlert] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
@@ -34,20 +34,20 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
         setPassword(props.data.password)
         setUrl(props.data.url)
         setIsNA(props.data.username.length === 0)
-        isEdited && setIsEdited(false)
+        !isStatic && setIsStatic(true)
         IsVisibleAlert && setIsVisibleAlert(false)
         isUpdating && setIsUpdating(false)
     }
 
-    const setEdit = () => {
-        setIsEdited(
+    const setStatic = () => {
+        setIsStatic(
             props.data.title === title && props.data.username === username
             && props.data.password === password && props.data.url === url
             )
     }
     
     const isValidForm = (): boolean => {
-        return isValidUrl(url) && title.length !== 0 && password.length !== 0 && (username.length !== 0 || isNA) && props.checkTitleIsUnique(title)
+        return isValidUrl(url) && title.length !== 0 && password.length !== 0 && (username.length !== 0 || isNA) && props.checkTitleIsUnique(title, true, props.data.title)
     }
 
     const updateIconUrl = async () => {
@@ -62,7 +62,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
     }
 
     useEffect(() => {
-        setEdit()
+        setStatic()
     }, [title, username, password, url])
 
     useEffect(() => {
@@ -74,14 +74,14 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
         PasswordAccount.put({title, prevTitle: props.data.title, username, password, url, iconUrl: iconUrl ?? ''}).then(res => {
             props.confirmAction()
             props.updateData(props.data.title, createRowData(title, username, password, url, iconUrl))
-            setIsEdited(false)
+            setIsStatic(false)
             setIsUpdating(false)
         })
     }, [isUpdating])
 
     return (
         <>
-            <div className='absolute top-20 left-1/3' style={{zIndex: '99999'}}><MyAlert content='Please enter all mandatory details in the form!' isVisible={IsVisibleAlert} setInvisible={() => setIsVisibleAlert(false)} severity='warning'/></div>
+            <div className='absolute flex justify-center top-20 left-1/2 right-1/2' style={{zIndex: '99999'}}><MyAlert content='Please enter all mandatory details in the valid manner!' isVisible={IsVisibleAlert} setInvisible={() => setIsVisibleAlert(false)} severity='warning'/></div>
             <Dialog open={props.isVisible}>
                 <DialogTitle>Edit Account</DialogTitle>
                 <DialogContent className="flex flex-col gap-5 m-5">
@@ -92,7 +92,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
                     </div>
                     <div className="flex gap-2">
                         Title:
-                        <InputField value={title} setValue={setTitle}/>
+                        <InputField value={title} setValue={setTitle} type='info' infoValue='Duplicate Titles are not Allowed'/>
                     </div>
                     <div className="flex gap-2">
                         Username:
@@ -113,7 +113,7 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
                         }}/>
                     <Button
                         value='Confirm'
-                        disabled={isEdited || isUpdating}
+                        disabled={isStatic || isUpdating}
                         action={() => {
                             if (!isValidForm()) {
                                 setIsVisibleAlert(true)

@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Button } from "./Button";
 import { useNavigate } from "react-router-dom";
-import { reqLogout } from "../APIrequests";
+import { Account } from "../APIrequests";
 
 type DeleteDialogProps = {
     isVisible: boolean,
@@ -15,7 +15,7 @@ export const LogoutDialog = (props: DeleteDialogProps) => {
 
     useEffect(() => {
         if (isLoading) {
-            reqLogout().then(res => {
+            Account.reqLogout().then(res => {
                 setIsLoading(false)
                 nav('/')
             })

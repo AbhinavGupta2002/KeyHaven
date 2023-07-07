@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "../pattern-library/Button";
 import { InputField } from "../pattern-library/InputField";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { reqLogin } from "../APIrequests";
+import { Account } from "../APIrequests";
 import { Loader } from "../pattern-library/Loader";
 
 type LoginProps = {
@@ -21,7 +21,7 @@ export const Login = ({setIsLogin}: LoginProps) => {
                 email: email,
                 password: password
             }
-            Promise.resolve(reqLogin(payload)).then(res => {
+            Account.reqLogin(payload).then(res => {
                 setIsLoading(false)
                 res.type === 'SUCCESS' && navigate('/dashboard')
             })

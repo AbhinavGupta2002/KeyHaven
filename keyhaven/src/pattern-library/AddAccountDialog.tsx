@@ -21,7 +21,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
     const [password, setPassword] = useState('')
     const [url, setUrl] = useState('')
     const [iconUrl, setIconUrl] = useState('/favicon.ico')
-    const [isEdited, setIsEdited] = useState(false)
+    const [isStatic, setIsStatic] = useState(true)
     const [isNA, setIsNA] = useState(false)
     const [IsVisibleAlert, setIsVisibleAlert] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
@@ -33,13 +33,13 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
         setUrl('')
         setIconUrl('/favicon.ico')
         isNA && setIsNA(false)
-        isEdited && setIsEdited(false)
+        !isStatic && setIsStatic(true)
         IsVisibleAlert && setIsVisibleAlert(false)
         isUpdating && setIsUpdating(false)
     }
 
-    const setEdit = () => {
-        setIsEdited(title === '' && username === '' && password === '' && url === '')
+    const setStatic = () => {
+        setIsStatic(title === '' && username === '' && password === '' && url === '')
     }
 
     const updateIconUrl = async () => {
@@ -58,7 +58,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
     }
 
     useEffect(() => {
-        setEdit()
+        setStatic()
     }, [title, username, password, url])
 
     useEffect(() => {
@@ -76,7 +76,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
 
     return (
         <>
-            <div className='absolute top-20 left-1/3' style={{zIndex: '99999'}}><MyAlert content='Please enter all mandatory details in the form!' isVisible={IsVisibleAlert} setInvisible={() => setIsVisibleAlert(false)} severity='warning'/></div>
+            <div className='top-20 left-1/2 right-1/2 flex justify-center absolute' style={{zIndex: '99999'}}><MyAlert content='Please enter all mandatory details in the valid manner!' isVisible={IsVisibleAlert} setInvisible={() => setIsVisibleAlert(false)} severity='warning'/></div>
             <Dialog open={props.isVisible} className="-z-20">
                 <DialogTitle>Add Account</DialogTitle>
                 <DialogContent className="flex flex-col gap-5 m-5">
@@ -87,7 +87,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
                     </div>
                     <div className="flex gap-2">
                         Title:
-                        <InputField value={title} setValue={setTitle}/>
+                        <InputField value={title} setValue={setTitle} type='info' infoValue='Duplicate Titles are not Allowed'/>
                     </div>
                     <div className="flex gap-2">
                         Username:
@@ -108,7 +108,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
                         }}/>
                     <Button
                         value='Confirm'
-                        disabled={isEdited || isUpdating}
+                        disabled={isStatic || isUpdating}
                         action={() => {
                             if (!isValidForm()) {
                                 setIsVisibleAlert(true)

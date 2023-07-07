@@ -152,19 +152,6 @@ app.post('/create-tables', async (req, res) => {
     }
 });
 
-app.post('/signup', async (req, res) => {
-    try {
-        const salt = await bcrypt.genSalt(12)
-        const hash = await bcrypt.hash(req.body.password, salt)
-        await client.query(`INSERT INTO accounts (email, password, joined, is_verified) VALUES('${req.body.email}', '${hash}', (NOW() AT TIME ZONE 'est'), false);`)
-        const response = responses('success-default')
-        res.status(response.code).send(response.body)
-    } catch (err) {
-        console.log(err)
-        res.status(400).send(err)
-    }
-})
-
 function responses1(status) {
     if (status) {
         if (status === 'success-default') {
@@ -175,46 +162,7 @@ function responses1(status) {
     return null
 }
 
-app.post('/login', async (req, res) => {
-    console.log(req.body)
-    try {
-        const isValidEmail = await client.query(`SELECT password FROM accounts WHERE email = '${req.body.email}';`)
-        if (isValidEmail.rows.length) {
-            const isValidPassword = await bcrypt.compare(`${req.body.password}`, `${isValidEmail.rows[0].password}`)
-            if (isValidPassword) {
-                const response = responses('success-default')
-
-                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
-                cookieManager.set("keyHavenBearerToken", bearerToken, {httpOnly: true})
-
-                res.status(response.code).send(response.body);
-            } else {
-                throw(responses('invalid credentials'))
-            }
-        } else {
-            throw(responses('invalid credentials'))
-        }
-    } catch (err) {
-        if (err.hasOwnProperty('code')) {
-            res.status(err.code).send(err.body)
-        } else {
-            res.status(500).send(err)
-        }
-    }
-})
-
-app.post('/logout', async (req, res) => {
-    try {
-        cookieManager.remove('keyHavenBearerToken')
-        const response = responses('success-default')
-        res.status(response.code).send(response.body)
-    } catch (err) {
-        res.status(500).send(err)
-    }
-})
-
-app.post('/email', async (req, res) => {
-    console.log('check12')
+app.post('/email', authorizeUser, async (req, res) => {
     try {
         if (req.body.type === 'verifyAccount') {
             const result = await client.query(`SELECT is_verified FROM accounts WHERE email = '${req.body.receiverID}';`)
@@ -271,6 +219,36 @@ app.get('/account', authorizeUser, async (req, res) => {
     }
 })
 
+app.get('/account/isVerified', authorizeUser, async (req, res) => {
+    try {
+        const email = req.user.email
+        const results = await client.query(`SELECT is_verified FROM accounts WHERE email = '${email}';`);
+        let response
+        if (!results.rowCount) {
+            response = responses('account not found', 404)
+        } else {
+            response = responses('success-value', results.rows[0].is_verified)
+        }
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
+app.get('/account/isLoggedIn', async (req, res) => {
+    try {
+        let response
+        if (cookieManager.get('keyHavenBearerToken')) {
+            response = responses('success-default')
+        } else {
+            response = responses('account not found', 404)
+        }
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
 app.put('/account', authorizeUser, async(req, res) => {
     try {
         const email = req.user.email
@@ -278,6 +256,65 @@ app.put('/account', authorizeUser, async(req, res) => {
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch(err) {
+        res.status(500).send(err)
+    }
+})
+
+app.post('/account/signup', async (req, res) => {
+    try {
+        const salt = await bcrypt.genSalt(12)
+        const hash = await bcrypt.hash(req.body.password, salt)
+        const secretKey = crypto.randomBytes(32).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        await client.query(`INSERT INTO accounts (email, password, joined, is_verified) VALUES('${req.body.email}', '${hash}', (NOW() AT TIME ZONE 'est'), false);`)
+        await client.query(`INSERT INTO account_verif (email, email_key, pass_key) VALUES('${req.body.email}', '', '');`)
+        await client.query(`INSERT INTO password_secrets (email, secret_key, iv) VALUES('${req.body.email}', '${secretKey}', '${iv}');`)
+
+        const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
+        cookieManager.set("keyHavenBearerToken", bearerToken, {httpOnly: true})
+
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        console.log(err)
+        res.status(400).send(err)
+    }
+})
+
+app.post('/account/login', async (req, res) => {
+    try {
+        const isValidEmail = await client.query(`SELECT password FROM accounts WHERE email = '${req.body.email}';`)
+        if (isValidEmail.rows.length) {
+            const isValidPassword = await bcrypt.compare(`${req.body.password}`, `${isValidEmail.rows[0].password}`)
+            if (isValidPassword) {
+
+                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
+                cookieManager.set("keyHavenBearerToken", bearerToken, {httpOnly: true})
+
+                const response = responses('success-default')
+                res.status(response.code).send(response.body);
+            } else {
+                throw(responses('invalid credentials'))
+            }
+        } else {
+            throw(responses('invalid credentials'))
+        }
+    } catch (err) {
+        if (err.hasOwnProperty('code')) {
+            res.status(err.code).send(err.body)
+        } else {
+            res.status(500).send(err)
+        }
+    }
+})
+
+app.post('/account/logout', authorizeUser, async (req, res) => {
+    try {
+        cookieManager.remove('keyHavenBearerToken')
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
         res.status(500).send(err)
     }
 })
@@ -319,7 +356,7 @@ app.get('/passwordAccount', authorizeUser, async (req, res) => {
 
         const secretKeyUser = secretKeyResult.rows[0].secret_key
         const ivUser = secretKeyResult.rows[0].iv
-        const results = await client.query(`SELECT * FROM passwords WHERE '${userEmail}' = ANY (emails) ORDER BY id;`);
+        const results = await client.query(`SELECT * FROM passwords WHERE '${userEmail}' = ANY (emails) AND array_length(emails, 1) = 1 ORDER BY id;`);
 
         let passAccounts = results.rows
         for (const account of passAccounts) {
@@ -368,7 +405,7 @@ app.post('/passwordAccount', authorizeUser, async (req, res) => {
         await client.query(
             `INSERT INTO passwords
              (title, url, icon_url, emails, password, updated, username, updated_by, owned_by)
-             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${email}'], '${password}', CURRENT_TIMESTAMP, '${req.body.username}', '${email}', '${email}');`
+             VALUES ('${req.body.title}', '${req.body.url}', '${req.body.iconUrl}', ARRAY ['${email}'], '${password}', (NOW() AT TIME ZONE 'est'), '${req.body.username}', '${email}', '${email}');`
         )
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -400,7 +437,7 @@ app.put('/passwordAccount', authorizeUser, async (req, res) => {
 
         await client.query(
             `UPDATE passwords
-             SET title = '${req.body.title}', username = '${req.body.username}', password = '${password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = CURRENT_TIMESTAMP, updated_by = '${userEmail}'
+             SET title = '${req.body.title}', username = '${req.body.username}', password = '${password}', url = '${req.body.url}', icon_url = '${req.body.iconUrl}', updated = (NOW() AT TIME ZONE 'est'), updated_by = '${userEmail}'
              WHERE '${userEmail}' = ANY (emails) AND title = '${req.body.prevTitle}';`
         )
         const response = responses('success-default')
@@ -437,3 +474,6 @@ app.delete('/passwordAccount/:title', authorizeUser, async (req, res) => {
 
 // 1. Restrict access - meaning if any value is changed by a shared user, they will need approval for the change by owner
 // 2. Have history log of specific changes (values not shown, only the fields) made by shared users and owner
+
+
+// prevent '?' in any text!!

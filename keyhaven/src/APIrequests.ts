@@ -1,47 +1,4 @@
 
-// logs in a user if credentials are valid
-export const reqLogin = async (userData: { email: String; password: String; }) => {
-    const requestData = {
-        email: userData.email,
-        password: userData.password
-    };
-    try {
-        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/login`, {
-            headers: {'Content-Type':'application/json'},
-            method: "POST",
-            body: JSON.stringify(requestData)
-        })
-        const responseValue = await response.json()
-        if (responseValue.type === 'FAIL') {
-            throw responseValue.message
-        } else {
-            console.log(responseValue.value)
-        }
-        return {type: 'SUCCESS'}
-    } catch (err) {
-        console.error(`ERROR: ${err}`)
-        return {type: 'FAIL'}
-    }
-}
-
-// logs out a user
-export const reqLogout = async () => {
-    try {
-        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/logout`, {
-            headers: {'Content-Type':'application/json'},
-            method: "POST"
-        })
-        const responseValue = await response.json()
-        if (response.status !== 200) {
-            throw responseValue.message
-        }
-        return {type: 'SUCCESS'}
-    } catch (err) {
-        console.error(`ERROR: ${err}`)
-        return {type: 'FAIL'}
-    }
-}
-
 export const getIconUrl = async (url: string) => {
     try {
         const response = await fetch(`https://besticon-demo.herokuapp.com/allicons.json?url=${url}`, {
@@ -99,6 +56,37 @@ export const Account = {
             return {type: 'FAIL'}
         }
     },
+    getIsVerified: async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/isVerified`, {
+                headers: {'Content-Type':'application/json'},
+                method: "GET"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return responseValue.value
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    getLoggedIn: async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/isLoggedIn`, {
+                headers: {'Content-Type':'application/json'},
+                method: "GET"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === ('FAIL' || undefined)) {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            return {type: 'FAIL'}
+        }
+    },
     put: async (account: putAccount) => {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account`, {
@@ -110,6 +98,65 @@ export const Account = {
             if (response.status !== 200) {
                 throw responseValue.message
             }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    reqLogin: async (userData: { email: String; password: String; }) => { // logs in a user if credentials are valid
+        const requestData = {
+            email: userData.email,
+            password: userData.password
+        };
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/login`, {
+                headers: {'Content-Type':'application/json'},
+                method: "POST",
+                body: JSON.stringify(requestData)
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === 'FAIL') {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    reqLogout: async () => { // logs out a user
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/logout`, {
+                headers: {'Content-Type':'application/json'},
+                method: "POST"
+            })
+            const responseValue = await response.json()
+            if (response.status !== 200) {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    reqSignUp: async (userData: { email: String; password: String; }) => { // signs up a user
+        const requestData = {
+            email: userData.email,
+            password: userData.password
+        };
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/signup`, {
+                headers: {'Content-Type':'application/json'},
+                method: "POST",
+                body: JSON.stringify(requestData)
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === 'FAIL' || !responseValue.type) {
+                throw responseValue.message
+            }
+            console.log(responseValue.type, 'HERE')
             return {type: 'SUCCESS'}
         } catch (err) {
             console.error(`ERROR: ${err}`)

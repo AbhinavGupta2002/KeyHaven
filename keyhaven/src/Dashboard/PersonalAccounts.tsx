@@ -16,7 +16,10 @@ import { TableHead, Tooltip } from '@mui/material';
 import { AiOutlinePlus, AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 import { PersonalAccountsRow } from './PersonalAccountsRow';
 import { AddAccountDialog } from '../pattern-library/AddAccountDialog';
-import { PasswordAccount } from '../APIrequests';
+import { Account, PasswordAccount } from '../APIrequests';
+
+import emptyBoards from '../img/empty.svg'
+import { BoxTypeA } from '../pattern-library/BoxTypeA';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -104,6 +107,7 @@ export const PersonalAccounts = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [isVerified, setIsVerified] = useState(false)
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
@@ -145,12 +149,27 @@ export const PersonalAccounts = () => {
     setRows(newRows)
   }
 
-  const checkTitleIsUnique = (title: string): boolean => {
+  /*const checkTitleIsUnique = (title: string, isEditing?: boolean): boolean => {
     return !rows.some(row => row.title === title);
+  }*/
+
+  const checkTitleIsUnique = (title: string, isEditing?: boolean, oldTitle?: string): boolean => {
+    for (let i = 0; i < rows.length; ++i) {
+      if (rows[i].title === title) {
+        if (isEditing && oldTitle === title) {
+          continue
+        }
+        return false
+      }
+    }
+    return true
   }
 
   useEffect(() => {
       if (!isDataLoaded) {
+        Account.getIsVerified().then(res => {
+          res && setIsVerified(true)
+        })
         PasswordAccount.getAll().then(res => {
           const tempRows: RowDataModel[] = []
           res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
@@ -163,57 +182,79 @@ export const PersonalAccounts = () => {
   return (
     <>
       <h1 className='text-2xl mb-6'>Personal Accounts</h1>
-      <button className={`flex gap-3 p-1 rounded-md ml-auto mb-2 ${isDataLoaded ? 'cursor-pointer hover:bg-default1 hover:text-white' : 'cursor-default bg-gray-200 text-gray-500'}`} onClick={() => isDataLoaded && setShowAddDialog(true)}>
-        <AiOutlinePlus className=' self-center'/>
-        <div>Add Account</div>
-      </button>
-      <TableContainer component={Paper}>
-        <Table sx={{ width: '83vw'}} aria-label="custom pagination table">
-          <TableHead>
-            <TableRow className='bg-gray-100'>
-              <TableCell></TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell align="right">Username</TableCell>
-              <TableCell align="right">Password</TableCell>
-              <TableCell align="right">URL</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(rowsPerPage > 0
-              ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : rows
-            ).map((row) => (
-              <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded} checkTitleIsUnique={checkTitleIsUnique}/>
-            ))}
-            {emptyRows > 0 && (
-              <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={6} />
-              </TableRow>
-            )}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TablePagination
-                rowsPerPageOptions={[]}
-                colSpan={5}
-                count={rows.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                SelectProps={{
-                  inputProps: {
-                    'aria-label': 'rows per page',
-                  },
-                  native: true,
-                }}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                ActionsComponent={TablePaginationActions}
-              />
-            </TableRow>
-          </TableFooter>
-        </Table>
-      </TableContainer>
+      {!isDataLoaded || (isVerified && rows.length) ?
+        <div className='pr-5'>
+          <button className={`flex gap-3 p-1 rounded-md ml-auto mb-2 ${isDataLoaded ? 'cursor-pointer hover:bg-default1 hover:text-white' : 'cursor-default bg-gray-200 text-gray-500'}`} onClick={() => isDataLoaded && setShowAddDialog(true)}>
+            <AiOutlinePlus className='self-center'/>
+            <div>Add Account</div>
+          </button>
+          <TableContainer component={Paper}>
+            <Table aria-label="custom pagination table">
+              <TableHead>
+                <TableRow className='bg-gray-100'>
+                  <TableCell></TableCell>
+                  <TableCell>Title</TableCell>
+                  <TableCell align="right">Username</TableCell>
+                  <TableCell align="right">Password</TableCell>
+                  <TableCell align="right">URL</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {(rowsPerPage > 0
+                  ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  : rows
+                ).map((row) => (
+                  <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded} checkTitleIsUnique={checkTitleIsUnique}/>
+                ))}
+                {emptyRows > 0 && (
+                  <TableRow style={{ height: 53 * emptyRows }}>
+                    <TableCell colSpan={6} />
+                  </TableRow>
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TablePagination
+                    rowsPerPageOptions={[]}
+                    colSpan={5}
+                    count={rows.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    SelectProps={{
+                      inputProps: {
+                        'aria-label': 'rows per page',
+                      },
+                      native: true,
+                    }}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    ActionsComponent={TablePaginationActions}
+                  />
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableContainer>
+        </div> :
+        <div className='flex flex-col gap-10 mt-20'>
+          <div className='flex justify-center'>
+            <img src={emptyBoards} className=' w-1/5'/>
+          </div>
+          {!isVerified &&
+            <div className='flex justify-center'>
+              <BoxTypeA>
+                    To add accounts, please go to settings and verify your email.
+              </BoxTypeA>
+            </div>
+          }
+          <div className='flex justify-center'>
+            <button className={`flex gap-3 p-1 rounded-md ${isVerified ? 'cursor-pointer hover:bg-default1 hover:text-white' : 'cursor-default bg-gray-200 text-gray-500'}`} onClick={() => isVerified && setShowAddDialog(true)}>
+              <AiOutlinePlus className='self-center'/>
+              <div>Add Account</div>
+            </button>
+          </div>
+        </div>
+      }
       <AddAccountDialog
         isVisible={showAddDialog} cancelAction={() => setShowAddDialog(false)}
         confirmAction={() => setShowAddDialog(false)} updateData={handleAddRowData}
