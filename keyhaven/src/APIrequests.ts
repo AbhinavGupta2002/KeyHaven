@@ -156,13 +156,45 @@ export const Account = {
             if (responseValue.type === 'FAIL' || !responseValue.type) {
                 throw responseValue.message
             }
-            console.log(responseValue.type, 'HERE')
             return {type: 'SUCCESS'}
         } catch (err) {
             console.error(`ERROR: ${err}`)
             return {type: 'FAIL'}
         }
-    }
+    },
+    verifyEmail: async (userData: {email: String, token: String}) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/verifyEmail/${userData.email}/${userData.token}`, {
+                headers: {'Content-Type':'application/json'},
+                method: "GET"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === 'FAIL' || !responseValue.type) {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
+    changeMasterPassword: async (password: string) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/changeMasterPassword`, {
+            headers: {'Content-Type':'application/json'},
+            method: "PUT",
+            body: JSON.stringify({password})
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === 'FAIL' || !responseValue.type) {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    },
 }
 
 // PasswordAccount is the account for a key

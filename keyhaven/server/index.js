@@ -162,6 +162,12 @@ function responses1(status) {
     return null
 }
 
+const saveVerifToken = async (req, columnName) => {
+    const token = crypto.randomBytes(16).toString('hex')
+    req.body.verifToken = token
+    await client.query(`UPDATE account_verif SET ${columnName} = '${token}' WHERE email = '${req.body.receiverID}';`)
+}
+
 app.post('/email', authorizeUser, async (req, res) => {
     try {
         if (req.body.type === 'verifyAccount') {
@@ -174,10 +180,10 @@ app.post('/email', authorizeUser, async (req, res) => {
             if (result.rows[0].is_verified) {
                 throw 'User is already verified!'
             }
-
-            const token = crypto.randomBytes(16).toString('hex')
-            req.body.emailVerifToken = token
-            await client.query(`UPDATE account_verif SET email_key = '${token}' WHERE email = '${req.body.receiverID}';`)
+            
+            saveVerifToken(req, 'email_key')
+        } else if (req.body.type === 'changeMasterPassword') {
+            saveVerifToken(req, 'pass_key')
         }
 
         const mailOptions = {
@@ -260,6 +266,25 @@ app.put('/account', authorizeUser, async(req, res) => {
     }
 })
 
+app.put('/account/changeMasterPassword', authorizeUser, async(req, res) => {
+    try {
+        if (!req.body.password) {
+            throw 'Invalid password received!'
+        }
+
+        const email = req.user.email
+        const salt = await bcrypt.genSalt(12)
+        const hash = await bcrypt.hash(req.body.password, salt)
+
+        Promise.all([client.query(`UPDATE account_verif SET pass_key = '' WHERE email = '${email}';`), client.query(`UPDATE accounts SET password = '${hash}' WHERE email = '${email}';`)]).then(_ => {
+            const response = responses('success-default')
+            res.status(response.code).send(response.body)
+        })
+    } catch(err) {
+        res.status(500).send(err)
+    }
+})
+
 app.post('/account/signup', async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(12)
@@ -333,10 +358,9 @@ app.get('/verifyEmail/:email/:token', async (req, res) => {
         if (token !== result.rows[0].email_key) {
             throw 'Email link is invalid'
         }
-
         Promise.all([client.query(`UPDATE account_verif SET email_key = '' WHERE email = '${email}';`), client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`)]).then(_ => {
-            const response = responses('success-value', 'Your account has been verified successfully! You can close this page now.')
-            res.status(response.code).send(response.body.value)
+            const response = responses('success-default')
+            res.status(response.code).send(response.body)
         })
     } catch (err) {
         res.status(500).send(err)

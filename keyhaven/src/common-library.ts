@@ -17,7 +17,7 @@ export const EmailType = {
       firstName: firstName,
       title: 'Request to Change Master Password',
       content: 'Please click the following link to change your master password for the account linked to this email. If you did not request this, contact customer support immediately.',
-      type: 'general'
+      type: 'changeMasterPassword'
     }
   },
   verifyEmail: (email: string, firstName: string) => {
