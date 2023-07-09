@@ -266,13 +266,14 @@ app.put('/account', authorizeUser, async(req, res) => {
     }
 })
 
-app.put('/account/changeMasterPassword', authorizeUser, async(req, res) => {
+app.put('/account/changeMasterPassword/:email/:token', async(req, res) => {
     try {
         if (!req.body.password) {
             throw 'Invalid password received!'
         }
 
-        const email = req.user.email
+        const email = req.params.email
+        const token = req.params.token
         const salt = await bcrypt.genSalt(12)
         const hash = await bcrypt.hash(req.body.password, salt)
 
@@ -280,6 +281,23 @@ app.put('/account/changeMasterPassword', authorizeUser, async(req, res) => {
             const response = responses('success-default')
             res.status(response.code).send(response.body)
         })
+    } catch(err) {
+        res.status(500).send(err)
+    }
+})
+
+app.get('/account/checkMasterPasswordChange/:email/:token', async(req, res) => {
+    try {
+        const email = req.params.email
+        const token = req.params.token
+        
+        const result = await client.query(`SELECT pass_key FROM account_verif WHERE email = '${email}';`)
+        
+        if (!result.rowCount || token !== result.rows[0].pass_key) {
+            throw 'Invalid link!'
+        }
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
     } catch(err) {
         res.status(500).send(err)
     }

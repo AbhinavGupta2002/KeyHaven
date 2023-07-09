@@ -39,6 +39,17 @@ interface putAccount {
     lastName: string;
 }
 
+interface changeMasterPassword {
+    email: string;
+    token: string;
+    password: string;
+}
+
+interface checkMasterPasswordChange {
+    email: string;
+    token: string;
+}
+
 export const Account = {
     get: async () => {
         try {
@@ -178,12 +189,12 @@ export const Account = {
             return {type: 'FAIL'}
         }
     },
-    changeMasterPassword: async (password: string) => {
+    changeMasterPassword: async (props: changeMasterPassword) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/changeMasterPassword`, {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/changeMasterPassword/${props.email}/${props.token}`, {
             headers: {'Content-Type':'application/json'},
             method: "PUT",
-            body: JSON.stringify({password})
+            body: JSON.stringify({password: props.password})
             })
             const responseValue = await response.json()
             if (responseValue.type === 'FAIL' || !responseValue.type) {
@@ -195,6 +206,22 @@ export const Account = {
             return {type: 'FAIL'}
         }
     },
+    checkMasterPasswordChange: async (props: checkMasterPasswordChange) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/checkMasterPasswordChange/${props.email}/${props.token}`, {
+            headers: {'Content-Type':'application/json'},
+            method: "GET"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === 'FAIL' || !responseValue.type) {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
+    }
 }
 
 // PasswordAccount is the account for a key
