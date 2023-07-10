@@ -221,6 +221,22 @@ export const Account = {
             console.error(`ERROR: ${err}`)
             return {type: 'FAIL'}
         }
+    },
+    delete: async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account`, {
+            headers: {'Content-Type':'application/json'},
+            method: "DELETE"
+            })
+            const responseValue = await response.json()
+            if (responseValue.type === 'FAIL' || !responseValue.type) {
+                throw responseValue.message
+            }
+            return {type: 'SUCCESS'}
+        } catch (err) {
+            console.error(`ERROR: ${err}`)
+            return {type: 'FAIL'}
+        }
     }
 }
 

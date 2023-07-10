@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogTitle } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../pattern-library/Button";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Account } from "../APIrequests";
 
 type DeleteAccountDialogProps = {
     isVisible: boolean,
@@ -9,7 +10,17 @@ type DeleteAccountDialogProps = {
 }
 
 export const DeleteAccountDialog = (props: DeleteAccountDialogProps) => {
-    
+    const [isDeleting, setIsDeleting] = useState(false)
+    const nav = useNavigate()
+
+    useEffect(() => {
+        if (isDeleting) {
+            Account.delete().then(_ => {
+                nav('/')
+            })
+        }
+    }, [isDeleting])
+
     return (
         <Dialog open={props.isVisible}>
             <DialogTitle>Account Deletion</DialogTitle>
@@ -18,9 +29,7 @@ export const DeleteAccountDialog = (props: DeleteAccountDialogProps) => {
             </DialogContent>
             <DialogContent className="flex gap-12 justify-center">
                 <Button value='Cancel' action={() => props.cancelAction()}/>
-                <Link to='/'>
-                    <Button value='Confirm' action={() => null}/>
-                </Link>
+                <Button value='Confirm' action={() => setIsDeleting(true)} disabled={isDeleting}/>
             </DialogContent>
         </Dialog>
     )

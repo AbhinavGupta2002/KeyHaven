@@ -362,6 +362,24 @@ app.post('/account/logout', authorizeUser, async (req, res) => {
     }
 })
 
+app.delete('/account', authorizeUser, async (req, res) => {
+    try {
+        const email = req.user.email
+        cookieManager.remove('keyHavenBearerToken')
+        
+        await client.query(`DELETE FROM passwords WHERE owned_by = '${email}';`)
+        await client.query(`UPDATE passwords SET emails = ARRAY_REMOVE(emails, '${email}') WHERE '${email}' = ANY (emails);`)
+        await client.query(`DELETE FROM password_secrets WHERE email = '${email}';`)
+        await client.query(`DELETE FROM account_verif WHERE email = '${email}';`)
+        await client.query(`DELETE FROM accounts WHERE email = '${email}';`)
+
+        const response = responses('success-default')
+        res.status(response.code).send(response.body)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+})
+
 // ACCOUNT VERIFICATION
 
 app.get('/verifyEmail/:email/:token', async (req, res) => {
