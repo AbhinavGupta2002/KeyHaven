@@ -9,6 +9,10 @@ export const isValidUrl = (url: string) => {
     }
 }
 
+export const checkBearerTokenExpiry = (obj: any): boolean => {
+  return obj?.type === 'FAIL' && obj?.message === 'bearer token missing'
+}
+
 // types of email that can be sent
 export const EmailType = {
   changeMasterPassword: (email: string, firstName: string) => {

@@ -18,10 +18,9 @@ const connectionString = process.env.CONNECTION_STRING
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({}));
+app.use(cors({origin: process.env.CLIENT_URL, credentials: true}));
 
 let client = new pg.Client(connectionString)
-const cookieManager = new Cookies()
 const cryptoAlgorithm = 'aes-256-cbc';
 
 client.connect(function(err) {
@@ -45,6 +44,12 @@ const transporter = mailer.createTransport({
   }
 });
 
+const bearerTokenOptions = {
+    path: '/',
+    httpOnly: true,
+    maxAge: 30 * 60 * 1000 // expires in 30 minutes (min * sec * millisec)
+}
+
 // table schemas
 const accountSchema = tables.accounts
 const passwordSchema = tables.passwords
@@ -61,7 +66,7 @@ scheduler.scheduleJob('0 0 * * *', async () => { // runs once every day at 12 am
 })
 
 const authorizeUser = (req, res, next) => {
-    const bearerToken = cookieManager.get('keyHavenBearerToken') || null
+    const bearerToken = req.cookies.keyHavenBearerToken || null
 
     if (!bearerToken) {
         const response = responses('bearer token missing')
@@ -89,7 +94,7 @@ const generateRefreshToken = async (email) => {
     return refreshToken
 }
 
-app.get('/api', async (req, res) => {    
+app.get('/api', async (req, res) => {
     res.status(200).send({
         message: `Welcome to KeyHaven's Express Server`
     })
@@ -244,7 +249,7 @@ app.get('/account/isVerified', authorizeUser, async (req, res) => {
 app.get('/account/isLoggedIn', async (req, res) => {
     try {
         let response
-        if (cookieManager.get('keyHavenBearerToken')) {
+        if (req.cookies.keyHavenBearerToken) {
             response = responses('success-default')
         } else {
             response = responses('account not found', 404)
@@ -305,6 +310,14 @@ app.get('/account/checkMasterPasswordChange/:email/:token', async(req, res) => {
 
 app.post('/account/signup', async (req, res) => {
     try {
+        const isDuplicateEmail = (await client.query(`SELECT * FROM accounts WHERE email = '${req.body.email}';`)).rowCount
+
+        if (isDuplicateEmail) {
+            const response = responses('email is already taken')
+            res.status(response.code).send(response.body)
+            return
+        }
+
         const salt = await bcrypt.genSalt(12)
         const hash = await bcrypt.hash(req.body.password, salt)
         const secretKey = crypto.randomBytes(32).toString('hex')
@@ -315,13 +328,13 @@ app.post('/account/signup', async (req, res) => {
         await client.query(`INSERT INTO password_secrets (email, secret_key, iv) VALUES('${req.body.email}', '${secretKey}', '${iv}');`)
 
         const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
-        cookieManager.set("keyHavenBearerToken", bearerToken, {httpOnly: true})
 
         const response = responses('success-default')
-        res.status(response.code).send(response.body)
+        
+        res.status(response.code).cookie('keyHavenBearerToken', bearerToken, bearerTokenOptions).send(response.body);
     } catch (err) {
         console.log(err)
-        res.status(400).send(err)
+        res.status(500).send(err)
     }
 })
 
@@ -333,10 +346,10 @@ app.post('/account/login', async (req, res) => {
             if (isValidPassword) {
 
                 const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
-                cookieManager.set("keyHavenBearerToken", bearerToken, {httpOnly: true})
 
                 const response = responses('success-default')
-                res.status(response.code).send(response.body);
+                
+                res.status(response.code).cookie('keyHavenBearerToken', bearerToken, bearerTokenOptions).send(response.body);
             } else {
                 throw(responses('invalid credentials'))
             }
@@ -354,7 +367,7 @@ app.post('/account/login', async (req, res) => {
 
 app.post('/account/logout', authorizeUser, async (req, res) => {
     try {
-        cookieManager.remove('keyHavenBearerToken')
+        res.clearCookie('keyHavenBearerToken')
         const response = responses('success-default')
         res.status(response.code).send(response.body)
     } catch (err) {
@@ -365,7 +378,7 @@ app.post('/account/logout', authorizeUser, async (req, res) => {
 app.delete('/account', authorizeUser, async (req, res) => {
     try {
         const email = req.user.email
-        cookieManager.remove('keyHavenBearerToken')
+        res.clearCookie('keyHavenBearerToken')
         
         await client.query(`DELETE FROM passwords WHERE owned_by = '${email}';`)
         await client.query(`UPDATE passwords SET emails = ARRAY_REMOVE(emails, '${email}') WHERE '${email}' = ANY (emails);`)

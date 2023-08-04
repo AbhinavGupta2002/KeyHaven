@@ -2,12 +2,14 @@ import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Button } from "./Button";
 import { PasswordAccount } from "../APIrequests";
+import { checkBearerTokenExpiry } from "../common-library";
 
 type DeleteDialogProps = {
     title: string,
     isVisible: boolean,
     cancelAction: Function,
-    confirmAction: Function
+    confirmAction: Function,
+    navigate: Function
 }
 
 export const DeleteDialog = (props: DeleteDialogProps) => {
@@ -16,8 +18,12 @@ export const DeleteDialog = (props: DeleteDialogProps) => {
     useEffect(() => {
         if (isDeleting) {
             PasswordAccount.delete({title: props.title}).then(res => {
-                res.type === 'SUCCESS' ? props.confirmAction() : props.cancelAction()
-                setIsDeleting(false)
+                if (checkBearerTokenExpiry(res)) {
+                    props.navigate('/')
+                } else {
+                    res.type === 'SUCCESS' ? props.confirmAction() : props.cancelAction()
+                    setIsDeleting(false)
+                }
             })
         }
     }, [isDeleting])

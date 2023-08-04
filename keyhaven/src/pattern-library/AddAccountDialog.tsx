@@ -4,7 +4,7 @@ import { Button } from "./Button";
 import { createRowData } from "../Dashboard/PersonalAccounts";
 import { InputField } from "./InputField";
 import { PasswordAccount, getIconUrl } from "../APIrequests";
-import { isValidUrl } from "../common-library";
+import { checkBearerTokenExpiry, isValidUrl } from "../common-library";
 import { MyAlert } from "./MyAlert";
 
 type AddAccountDialogProps = {
@@ -12,7 +12,8 @@ type AddAccountDialogProps = {
     cancelAction: Function,
     confirmAction: Function,
     checkTitleIsUnique: Function,
-    updateData: Function
+    updateData: Function,
+    navigate: Function
 }
 
 export const AddAccountDialog = (props: AddAccountDialogProps) => {
@@ -68,9 +69,13 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
     useEffect(() => {
         isUpdating &&
         PasswordAccount.post({title, username, password, url, iconUrl}).then(res => {
-            props.updateData(createRowData(title, username, password, url, iconUrl))
-            props.confirmAction()
-            clearInputs()
+            if (checkBearerTokenExpiry(res)) {
+                props.navigate('/')
+            } else {
+                props.updateData(createRowData(title, username, password, url, iconUrl))
+                props.confirmAction()
+                clearInputs()
+            }
         })
     }, [isUpdating])
 

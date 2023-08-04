@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "../pattern-library/Button";
 import { InputField } from "../pattern-library/InputField";
-import { NavigateFunction, useNavigate } from "react-router-dom";
 import { Account } from "../APIrequests";
 import { Loader } from "../pattern-library/Loader";
 import { MyAlert } from "../pattern-library/MyAlert";
 
 type LoginProps = {
-    setIsLogin: Function
+    setIsLogin: Function,
+    navigate: Function
 }
   
 
-export const Login = ({setIsLogin}: LoginProps) => {
+export const Login = ({setIsLogin, navigate}: LoginProps) => {
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
     const [isLoading, setIsLoading] = useState<Boolean>(false)
     const [showInvalidAlert, setShowInvalidAlert] = useState(false)
-    const navigate: NavigateFunction = useNavigate()
 
     useEffect(() => {
         if (isLoading) {
@@ -27,7 +26,13 @@ export const Login = ({setIsLogin}: LoginProps) => {
             }
             Account.reqLogin(payload).then(res => {
                 setIsLoading(false)
-                res.type === 'SUCCESS' ? navigate('/dashboard') : setShowInvalidAlert(true)
+                if (res.type === 'SUCCESS') {
+                    navigate('/dashboard')
+                } else {
+                    setEmail('')
+                    setPassword('')
+                    setShowInvalidAlert(true)
+                }
             })
         }
     }, [isLoading])

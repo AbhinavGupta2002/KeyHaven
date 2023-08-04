@@ -4,7 +4,7 @@ import { Button } from "./Button";
 
 import { RowDataModel, createRowData } from "../Dashboard/PersonalAccounts";
 import { InputField } from "./InputField";
-import { isValidUrl } from "../common-library";
+import { checkBearerTokenExpiry, isValidUrl } from "../common-library";
 import { MyAlert } from "./MyAlert";
 import { PasswordAccount, getIconUrl } from "../APIrequests";
 
@@ -14,7 +14,8 @@ type EditAccountDialogProps = {
     confirmAction: Function,
     data: RowDataModel,
     updateData: Function,
-    checkTitleIsUnique: Function
+    checkTitleIsUnique: Function,
+    navigate: Function
 }
 
 export const EditAccountDialog = (props: EditAccountDialogProps) => {
@@ -72,10 +73,14 @@ export const EditAccountDialog = (props: EditAccountDialogProps) => {
     useEffect(() => {
         isUpdating &&
         PasswordAccount.put({title, prevTitle: props.data.title, username, password, url, iconUrl: iconUrl ?? ''}).then(res => {
-            props.confirmAction()
-            props.updateData(props.data.title, createRowData(title, username, password, url, iconUrl))
-            setIsStatic(false)
-            setIsUpdating(false)
+            if (checkBearerTokenExpiry(res)) {
+                props.navigate('/')
+            } else {
+                props.confirmAction()
+                props.updateData(props.data.title, createRowData(title, username, password, url, iconUrl))
+                setIsStatic(false)
+                setIsUpdating(false)
+            }
         })
     }, [isUpdating])
 

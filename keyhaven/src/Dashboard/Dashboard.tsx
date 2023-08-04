@@ -8,24 +8,28 @@ import { Account } from "../APIrequests";
 
 export const Dashboard = () => {
     const [nav, setNav] = useState(0)
-    const pageNavigate = useNavigate()
+    const navigate = useNavigate()
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     useEffect(() => {
         Account.getLoggedIn().then(res => {
             if (res.type === 'FAIL') {
-                pageNavigate('/');
+                navigate('/');
+            } else {
+                setIsLoggedIn(true)
             }
         })
-    }, []);
+    }, [isLoggedIn]);
     
     return (
+        isLoggedIn ?
         <>
             <Header/>
             <div className="flex">
                 <NavBar nav={nav} setNav={setNav}/>
-                <DashboardBody nav={nav}/>
+                <DashboardBody nav={nav} navigate={navigate}/>
             </div>
             <Footer isAbsolute/>
-        </>
+        </> : <></>
     )
 }

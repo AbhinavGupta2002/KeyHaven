@@ -8,22 +8,28 @@ import { Loader } from "../pattern-library/Loader";
 import { MyAlert } from "../pattern-library/MyAlert";
 
 type SignUpProps = {
-    setIsLogin: Function
+    setIsLogin: Function,
+    navigate: Function
 }
 
-export const SignUp = ({setIsLogin}: SignUpProps) => {
+export const SignUp = ({setIsLogin, navigate}: SignUpProps) => {
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
     const [isLoading, setIsLoading] = useState<Boolean>(false)
     const [showInvalidAlert, setShowInvalidAlert] = useState(false)
-    const navigate = useNavigate()
 
     useEffect(() => {
         if (isLoading) {
             setShowInvalidAlert(false)
             Account.reqSignUp({email, password}).then(res => {
                 setIsLoading(false)
-                res.type === 'SUCCESS' ? navigate('/dashboard') : setShowInvalidAlert(true)
+                if (res.type === 'SUCCESS') {
+                    navigate('/dashboard')
+                } else {
+                    setEmail('')
+                    setPassword('')
+                    setShowInvalidAlert(true)
+                }
             })
         }
     }, [isLoading])

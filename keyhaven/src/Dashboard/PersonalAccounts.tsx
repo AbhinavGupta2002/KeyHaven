@@ -20,6 +20,7 @@ import { Account, PasswordAccount } from '../APIrequests';
 
 import emptyBoards from '../img/empty.svg'
 import { BoxTypeA } from '../pattern-library/BoxTypeA';
+import { checkBearerTokenExpiry } from '../common-library';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -38,6 +39,10 @@ export interface RowDataModel {
   url: string;
   iconUrl?: string;
   isDataLoaded: boolean;
+}
+
+interface PersonalAccountsProps {
+  navigate: Function
 }
 
 function TablePaginationActions(props: TablePaginationActionsProps) {
@@ -101,7 +106,7 @@ export function createRowData(title: string, username: string, password: string,
   return { title, username, password, url, iconUrl, isDataLoaded }
 }
 
-export const PersonalAccounts = () => {
+export const PersonalAccounts = (props: PersonalAccountsProps) => {
   const [rows, setRows] = useState(Array(5).fill(createRowData('', '', '', '', '', false)))
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -168,13 +173,17 @@ export const PersonalAccounts = () => {
   useEffect(() => {
       if (!isDataLoaded) {
         Account.getIsVerified().then(res => {
-          res && setIsVerified(true)
+          checkBearerTokenExpiry(res) ? props.navigate('/') : res && setIsVerified(true)
         })
         PasswordAccount.getAll().then(res => {
-          const tempRows: RowDataModel[] = []
-          res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
-          setRows(tempRows)
-          setIsDataLoaded(true)
+          if (checkBearerTokenExpiry(res)) {
+            props.navigate('/')
+          } else {
+            const tempRows: RowDataModel[] = []
+            res?.forEach((row: any) => tempRows.push(createRowData(row.title, row.username, row.password, row.url, row.icon_url)))
+            setRows(tempRows)
+            setIsDataLoaded(true)
+          }
         })
       }
   }, [isDataLoaded])
@@ -204,8 +213,11 @@ export const PersonalAccounts = () => {
                 {(rowsPerPage > 0
                   ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   : rows
-                ).map((row) => (
-                  <PersonalAccountsRow data={row} updateData={handleChangeRowData} deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded} checkTitleIsUnique={checkTitleIsUnique}/>
+                ).map((row, index) => (
+                  <PersonalAccountsRow
+                  key={index} data={row} updateData={handleChangeRowData}
+                  deleteData={handleDeleteRowData} isDataLoaded={isDataLoaded}
+                  checkTitleIsUnique={checkTitleIsUnique} navigate={props.navigate}/>
                 ))}
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
@@ -258,7 +270,7 @@ export const PersonalAccounts = () => {
       <AddAccountDialog
         isVisible={showAddDialog} cancelAction={() => setShowAddDialog(false)}
         confirmAction={() => setShowAddDialog(false)} updateData={handleAddRowData}
-        checkTitleIsUnique={checkTitleIsUnique}/>
+        checkTitleIsUnique={checkTitleIsUnique} navigate={props.navigate}/>
     </>
   );
 }

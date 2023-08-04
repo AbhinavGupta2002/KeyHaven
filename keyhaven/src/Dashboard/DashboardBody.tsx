@@ -1,19 +1,27 @@
 import React from "react";
 import PersonalAccounts from "./PersonalAccounts";
 import { Settings } from "./Settings";
+import { useNavigate } from "react-router-dom";
+import { InProgress } from "../pattern-library/InProgress";
 
 
 type DashboardBodyProps = {
-    nav: number
+    nav: number,
+    navigate: Function
 }
 
-export const DashboardBody = ({nav}: DashboardBodyProps) => {
+export const DashboardBody = (props: DashboardBodyProps) => {
+
     return (
         <div className="pt-24 pl-5 w-full">
-            {nav === 0 ?
-                <PersonalAccounts/> :
-            nav === 3 ? 
-                <Settings/> : <></>
+            {props.nav === 0 ?
+                <PersonalAccounts navigate={props.navigate}/> :
+            props.nav === 1 ?
+                <InProgress/> :
+            props.nav === 2 ?
+                <InProgress/> :
+            props.nav === 3 ?
+                <Settings navigate={props.navigate}/> : <></>
             }
         </div>
     )

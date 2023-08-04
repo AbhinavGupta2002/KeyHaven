@@ -20,7 +20,8 @@ export const sendEmail = async(requestData: {receiverID: string, firstName: stri
         const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/email`, {
             headers: {'Content-Type':'application/json'},
             method: "POST",
-            body: JSON.stringify(requestData)
+            body: JSON.stringify(requestData),
+            credentials: 'include'
         })
         const responseValue = await response.json()
         if (responseValue.type === 'FAIL') {
@@ -29,7 +30,7 @@ export const sendEmail = async(requestData: {receiverID: string, firstName: stri
         return {type: 'SUCCESS'}
     } catch (err) {
         console.error(`ERROR: ${err}`)
-        return {type: 'FAIL'}
+        return {type: 'FAIL', message: err}
     }
 }
 
@@ -55,7 +56,8 @@ export const Account = {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account`, {
                 headers: {'Content-Type':'application/json'},
-                method: "GET"
+                method: "GET",
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === ('FAIL' || undefined)) {
@@ -64,14 +66,15 @@ export const Account = {
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     },
     getIsVerified: async () => {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/isVerified`, {
                 headers: {'Content-Type':'application/json'},
-                method: "GET"
+                method: "GET",
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === ('FAIL' || undefined)) {
@@ -80,14 +83,15 @@ export const Account = {
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     },
     getLoggedIn: async () => {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/isLoggedIn`, {
                 headers: {'Content-Type':'application/json'},
-                method: "GET"
+                method: "GET",
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === ('FAIL' || undefined)) {
@@ -103,7 +107,8 @@ export const Account = {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account`, {
                 headers: {'Content-Type':'application/json'},
                 method: "PUT",
-                body: JSON.stringify(account)
+                body: JSON.stringify(account),
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (response.status !== 200) {
@@ -112,19 +117,20 @@ export const Account = {
             return {type: 'SUCCESS'}
         } catch (err) {
             console.error(`ERROR: ${err}`)
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     },
     reqLogin: async (userData: { email: String; password: String; }) => { // logs in a user if credentials are valid
         const requestData = {
             email: userData.email,
-            password: userData.password
+            password: userData.password,
         };
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/login`, {
-                headers: {'Content-Type':'application/json'},
+                headers: {'Content-Type':'application/json', 'Cache-Control': 'no-cache'},
                 method: "POST",
-                body: JSON.stringify(requestData)
+                body: JSON.stringify(requestData),
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === 'FAIL') {
@@ -140,7 +146,8 @@ export const Account = {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/logout`, {
                 headers: {'Content-Type':'application/json'},
-                method: "POST"
+                method: "POST",
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (response.status !== 200) {
@@ -226,7 +233,8 @@ export const Account = {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account`, {
             headers: {'Content-Type':'application/json'},
-            method: "DELETE"
+            method: "DELETE",
+            credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === 'FAIL' || !responseValue.type) {
@@ -267,20 +275,17 @@ export const PasswordAccount = {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount`, {
             headers: {'Content-Type':'application/json'},
-            method: "GET"
+            method: "GET",
+            credentials: 'include'
             })
             const responseValue = await response.json()
-            if (response.status === 401) {
-                console.log(responseValue, '401 fix')
-            }
             if (responseValue.type === ('FAIL' || undefined)) {
                 throw responseValue.message
             }
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)
-
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     },
     post: async (account: postPasswordAccount) => {
@@ -288,7 +293,8 @@ export const PasswordAccount = {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount`, {
             headers: {'Content-Type':'application/json'},
             method: "POST",
-            body: JSON.stringify(account)
+            body: JSON.stringify(account),
+            credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === ('FAIL' || undefined)) {
@@ -297,7 +303,7 @@ export const PasswordAccount = {
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     },
     put: async (account: putPasswordAccount) => {
@@ -305,7 +311,8 @@ export const PasswordAccount = {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount`, {
             headers: {'Content-Type':'application/json'},
             method: "PUT",
-            body: JSON.stringify(account)
+            body: JSON.stringify(account),
+            credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === ('FAIL' || undefined)) {
@@ -314,14 +321,15 @@ export const PasswordAccount = {
             return responseValue.value
         } catch (err) {
             console.error(`ERROR: ${err}`)
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     },
     delete: async (params: deletePasswordAccount) => {
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/passwordAccount/${params.title}`, {
             headers: {'Content-Type':'application/json'},
-            method: "DELETE"
+            method: "DELETE",
+            credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === ('FAIL' || undefined)) {
@@ -330,7 +338,7 @@ export const PasswordAccount = {
             return {type: 'SUCCESS'}
         } catch (err) {
             console.error(`ERROR: ${err}`)
-            return {type: 'FAIL'}
+            return {type: 'FAIL', message: err}
         }
     }
 }

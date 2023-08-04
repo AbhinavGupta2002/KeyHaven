@@ -10,7 +10,7 @@ import { MyAlert } from "../pattern-library/MyAlert";
 import { Account, sendEmail } from "../APIrequests";
 import { Skeleton, Tooltip } from "@mui/material";
 import { Loader } from "../pattern-library/Loader";
-import { EmailType } from "../common-library";
+import { EmailType, checkBearerTokenExpiry } from "../common-library";
 
 interface Account {
     first_name: string,
@@ -21,12 +21,16 @@ interface Account {
     is_verified: boolean
 }
 
+interface SettingsProps {
+    navigate: Function
+}
+
 const getCustomDate = (date: string): string => {
     const myDate = new Date(date)
     return `${myDate.getDate().toString().padStart(2, '0')}-${(myDate.getMonth() + 1).toString().padStart(2, '0')}-${myDate.getFullYear()}`
 }
 
-export const Settings = () => {
+export const Settings = (props: SettingsProps) => {
     const [isDisabled, setIsDisabled] = useState(true)
     const [isEditFirstName, setIsEditFirstName] = useState(false)
     const [isEditLastName, setIsEditLastName] = useState(false)
@@ -59,26 +63,33 @@ export const Settings = () => {
     useEffect(() => {isEditLastName && setPrevLastName(lastName)}, [isEditLastName])
     useEffect(() => {
         if (showVerifyAlert) {
-            sendEmail(EmailType.verifyEmail(email, firstName))
+            sendEmail(EmailType.verifyEmail(email, firstName)).then(res => checkBearerTokenExpiry(res) && props.navigate('/'))
         }
     }, [showVerifyAlert])
     useEffect(() => {
         if (isUpdating1 || isUpdating2) {
             Account.put({firstName, lastName}).then(res => {
-                setIsUpdating1(false)
-                setIsUpdating2(false)
+                if (checkBearerTokenExpiry(res)) {
+                    props.navigate('/')
+                } else {
+                    setIsUpdating1(false)
+                    setIsUpdating2(false)
+                }
             })
         }
     }, [isUpdating1, isUpdating2])
     useEffect(() => {
         if (isLoading) {
-            const reqAccount = Account.get()
-            Promise.resolve(reqAccount).then(res => {
-                setAccountDetails(res)
+            Account.get().then(res => {
+                if (checkBearerTokenExpiry(res)) {
+                    props.navigate('/')
+                } else {
+                    setAccountDetails(res)
+                }
             })
         }
         if (showPassAlert) {
-            sendEmail(EmailType.changeMasterPassword(email, firstName))
+            sendEmail(EmailType.changeMasterPassword(email, firstName)).then(res => checkBearerTokenExpiry(res) && props.navigate('/'))
         }
     }, [showPassAlert, isLoading])
 

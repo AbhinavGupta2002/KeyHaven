@@ -27,8 +27,8 @@ export const FAQ = () => {
         <div
         className="bg-white border border-gray-200 divide-y divide-gray-200 rounded-xl"
         >
-            {list.map(faq => 
-                <details className="group p-6 [&_summary::-webkit-details-marker]:hidden">
+            {list.map((faq, index) => 
+                <details className="group p-6 [&_summary::-webkit-details-marker]:hidden" key={index}>
                     <summary className="flex items-center justify-between cursor-pointer">
                     <h2 className="text-lg font-medium text-default1">
                         {faq.title}
