@@ -29,8 +29,8 @@ export const Header = (props: HeaderProps) => {
     return (
         !props.isLoading ?
             <div className="flex">
-                <div className="bg-gray-200 h-screen w-full lg:w-1/2 flex-col flex">
-                    <img src={logo} className=" max-w-sm lg:hidden self-center mt-10 rounded-lg"/>
+                <div className="bg-gray-200 h-screen w-full lg:w-1/2 flex-col flex px-4">
+                    <img src={logo} className="max-w-xs xs:max-w-sm lg:hidden self-center mt-10 rounded-lg"/>
                     {isLoggedIn ?
                         <RedirectDashboard navigate={props.navigate}/> :
                         isLogin ? <Login setIsLogin={setIsLogin} navigate={props.navigate}/> : <SignUp setIsLogin={setIsLogin} navigate={props.navigate}/>

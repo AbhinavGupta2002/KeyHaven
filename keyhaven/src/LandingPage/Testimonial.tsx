@@ -12,7 +12,7 @@ export const Testimonial = () => {
                         className="aspect-square w-full rounded-lg object-cover"
                     />
 
-                    <blockquote className="sm:col-span-2">
+                    <blockquote className="sm:col-span-2 text-center sm:text-start">
                         <p className="text-xl font-medium sm:text-2xl">
                             KeyHaven has changed the game for password management. The level of security and ease of use is unparalleled. 
                             I never have to worry about losing track of my passwords or having them compromised. 

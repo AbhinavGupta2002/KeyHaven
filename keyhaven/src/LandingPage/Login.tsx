@@ -20,20 +20,25 @@ export const Login = ({setIsLogin, navigate}: LoginProps) => {
     useEffect(() => {
         if (isLoading) {
             setShowInvalidAlert(false)
-            const payload = {
-                email: email,
-                password: password
-            }
-            Account.reqLogin(payload).then(res => {
+            if (!email.length || !password.length) {
                 setIsLoading(false)
-                if (res.type === 'SUCCESS') {
-                    navigate('/dashboard')
-                } else {
-                    setEmail('')
-                    setPassword('')
-                    setShowInvalidAlert(true)
+                setShowInvalidAlert(true)
+            } else {
+                const payload = {
+                    email: email,
+                    password: password
                 }
-            })
+                Account.reqLogin(payload).then(res => {
+                    setIsLoading(false)
+                    if (res.type === 'SUCCESS') {
+                        navigate('/dashboard')
+                    } else {
+                        setEmail('')
+                        setPassword('')
+                        setShowInvalidAlert(true)
+                    }
+                })
+            }
         }
     }, [isLoading])
 
@@ -41,13 +46,13 @@ export const Login = ({setIsLogin, navigate}: LoginProps) => {
         <>
             <div className="absolute w-full flex justify-center top-10" style={{zIndex: '999999'}}><MyAlert isVisible={showInvalidAlert} setInvisible={() => setShowInvalidAlert(false)} content="Login Credentials are Invalid!" severity="warning"/></div>
             <div className="flex justify-center h-full">
-                <div className="my-auto px-24 py-10 text-center bg-gray-100 rounded-xl shadow-xl w-login_signup border border-default1">
-                    <div className="font-bold text-2xl mb-10">Login</div>
-                    <div className="text-start mb-8">
+                <div className="my-auto px-24 py-5 h_xs:py-10 text-center bg-gray-100 rounded-xl shadow-xl w-login_signup border border-default1">
+                    <label className="font-bold text-2xl mb-5 h_xs:mb-10">Login</label>
+                    <div className="text-start mb-4 h_xs:mb-8">
                         <div className="mb-1 text-lg">Email</div>
                         <InputField value={email} setValue={setEmail} type=''/>
                     </div>
-                    <div className="text-start mb-12">
+                    <div className="text-start mb-5 h_xs:mb-12">
                         <div className="mb-1 text-lg">Master Password</div>
                         <InputField type='password' value={password} setValue={setPassword}/>
                     </div>
@@ -55,7 +60,7 @@ export const Login = ({setIsLogin, navigate}: LoginProps) => {
                         <Button value='Submit' disabled={isLoading} action={() => setIsLoading(true)}/>
                         {isLoading ? <Loader/> : <></>}
                     </div>
-                    <div className="mt-10 text-sm">Don't have an account? <span className="text-default1 font-bold cursor-pointer" onClick={() => setIsLogin(false)}>Sign Up</span></div>
+                    <div className="mt-5 h_xs:mt-10 text-sm">Don't have an account? <span className="text-default1 font-bold cursor-pointer" onClick={() => setIsLogin(false)}>Sign Up</span></div>
                 </div>
             </div>
         </>
