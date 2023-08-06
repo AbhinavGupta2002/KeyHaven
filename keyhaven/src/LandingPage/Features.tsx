@@ -8,7 +8,7 @@ import {RiGroup2Fill} from 'react-icons/ri'
 export const Features = () => {
     return (
         <div className="flex bg-gray-100 justify-center">
-            <div className="flex gap-20 p-20 bg-gray-200 mt-20 mb-20 rounded-xl shadow-xl border border-default1">
+            <div className="flex flex-col custom:flex-row flex-wrap justify-center align-middle mx-4 gap-20 p-20 bg-gray-200 my-20 rounded-xl shadow-xl border border-default1">
                 <div className="block rounded-xl border border-default1 bg-default1 p-8 shadow-xl w-96 h-58 hover:bg-blue-800 transition-all duration-200">
                     <BsFillShieldLockFill className="text-3xl text-default2"/>
 

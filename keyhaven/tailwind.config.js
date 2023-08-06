@@ -10,6 +10,7 @@ module.exports = {
       },
       width: {
         custom1: '35rem',
+        custom12: '25rem',
         login_signup: '27rem',
         custom2: '70rem',
         header: '96%'
@@ -18,6 +19,9 @@ module.exports = {
         custom1: '0.9rem',
         custom2: '2px'
       },
+      screens: {
+        'custom': '1057px'
+      }
     },
   },
   plugins: [],

@@ -98,7 +98,7 @@ export const Settings = (props: SettingsProps) => {
             <MyAlert isVisible={showPassAlert} setInvisible={() => setShowPassAlert(false)} content="An email has been sent to you to change the password!" severity="info"/>
             <MyAlert isVisible={showVerifyAlert} setInvisible={() => setShowVerifyAlert(false)} content="An email has been sent to you for verification!" severity="info"/>
             <div className="text-2xl mb-9">Settings</div>
-            <div className="ml-16 space-x-40 flex">
+            <div className="ml-16 gap-10 xl:gap-0 xl:space-x-40 flex flex-col-reverse xl:flex-row">
                 <div className="space-y-6">
                     <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                         <BoxTypeA classname="flex justify-between w-96">
