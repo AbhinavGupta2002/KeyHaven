@@ -15,6 +15,7 @@ export const MyAlert = (props: MyAlertProps) => {
 
   return (
     <Collapse in={props.isVisible}>
+        <div className='w-custom5 sm:w-custom4'>
         <Alert
             severity={props.severity}
             action={
@@ -29,10 +30,10 @@ export const MyAlert = (props: MyAlertProps) => {
                 <RxCross1/>
             </IconButton>
             }
-            sx={{ mb: 2, width: '30rem' }}
         >
             {props.content}
         </Alert>
+        </div>
     </Collapse>
   );
 }

@@ -41,7 +41,7 @@ export const SignUp = ({setIsLogin, navigate}: SignUpProps) => {
 
     return (
         <>
-            <div className="absolute w-full flex justify-center top-10" style={{zIndex: '999999'}}><MyAlert isVisible={showInvalidAlert} setInvisible={() => setShowInvalidAlert(false)} content="Email is Already Taken!" severity="warning"/></div>
+            <div className="absolute w-full flex justify-center top-10 -ml-4" style={{zIndex: '999999'}}><MyAlert isVisible={showInvalidAlert} setInvisible={() => setShowInvalidAlert(false)} content="Email is Already Taken!" severity="warning"/></div>
             <div className="flex justify-center h-full">
                 <div className="my-auto px-24 py-5 h_xs:py-10 text-center bg-gray-100 rounded-xl shadow-xl w-login_signup border border-default1">
                     <label className="font-bold text-2xl mb-5 h_xs:mb-10">Sign Up</label>

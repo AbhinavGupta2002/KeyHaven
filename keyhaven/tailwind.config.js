@@ -13,6 +13,8 @@ module.exports = {
         custom12: '25rem',
         custom2: '70rem',
         custom3: '19rem',
+        custom4: '30rem',
+        custom5: '21rem',
         login_signup: '27rem',
         header: '96%'
       },
