@@ -7,6 +7,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    volumes:
+      - .:/react-app-container
+      - /react-app-container/node_modules
     environment:
       - REACT_APP_SERVER_URL=${REACT_APP_SERVER_URL}
       - PORT=${PORT}
@@ -14,6 +17,9 @@ services:
   express-app-container:
     build:
       context: server
+    volumes:
+      - ./server:/express-app-container
+      - /express-app-container/node_modules
     restart: always
     ports:
       - "5432:5432"
