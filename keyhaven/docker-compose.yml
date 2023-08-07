@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  react-app-container:
+    build:
+      context: ./
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_SERVER_URL=${REACT_APP_SERVER_URL}
+      - PORT=${PORT}
+
+  express-app-container:
+    build:
+      context: server
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - CONNECTION_STRING=postgres://cgcflvxb:U5xV8H1O5LcSQaTcj1xvA63c65o8Qwx8@ziggy.db.elephantsql.com/cgcflvxb
+      - PORT=5432
+      - JWT_ACCESS_KEY=ZyA7F9wPkfrps2KgxH2M5BM3jHLU42zP
+      - JWT_REFRESH_KEY=ZyA9K61dFO9sCYiNM62XmHc6Hdzvym21
+      - CLIENT_URL=http://localhost:3000
+      - SERVER_URL=http://localhost:5432
+      - EMAIL_KEY=${BACKEND_EMAIL_KEY}
