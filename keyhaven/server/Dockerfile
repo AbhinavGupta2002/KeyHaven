@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:14
 
 ENV CONNECTION_STRING=postgres://cgcflvxb:U5xV8H1O5LcSQaTcj1xvA63c65o8Qwx8@ziggy.db.elephantsql.com/cgcflvxb
 

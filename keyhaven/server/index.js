@@ -256,7 +256,7 @@ app.get('/account/isVerified', authorizeUser, async (req, res) => {
                         response = responses('account not found', 404)
                     } else {
                         response = responses('success-value', isVerified)
-                        await redisClient.setEx(`isVerified@${email}`, 60 * 30, isVerified, (value, err) => {if (err) throw(err)})
+                        await redisClient.setEx(`isVerified@${email}`, 60 * 30, isVerified.toString()).then((value, err) => {if (err) throw(err)})
                     }
                 }
                 return res.status(response.code).send(response.body)
@@ -433,7 +433,7 @@ app.get('/verifyEmail/:email/:token', async (req, res) => {
             client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`),
             redisClient.exists(`isVerified@${email}`).then(async (isKeyValid, err) => {
                 if (isKeyValid) {
-                    await redisClient.setEx(`isVerified@${email}`, 60 * 30, true, (value, err) => {if (err) throw(err)})
+                    await redisClient.setEx(`isVerified@${email}`, 60 * 30, "true").then((value, err) => {if (err) throw(err)})
                 }
             })
         ]).then(_ => {
