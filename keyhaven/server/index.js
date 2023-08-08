@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken')
 const scheduler = require('node-schedule')
 const mailer = require('nodemailer')
 const cookieParser = require('cookie-parser')
-const Cookies = require('universal-cookie')
+const redis = require('redis')
 const crypto = require('crypto')
 
 const app = express()
@@ -20,13 +20,22 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({origin: process.env.CLIENT_URL, credentials: true}));
 
+
 let client = new pg.Client(connectionString)
+const redisClient = redis.createClient({
+    password: 'NkrmL67KkrSHUCeCMjWbimvGYS8kxGaX',
+    socket: {
+        host: 'redis-14910.c10.us-east-1-3.ec2.cloud.redislabs.com',
+        port: 14910
+    }
+});
 const cryptoAlgorithm = 'aes-256-cbc';
 
-client.connect(function(err) {
+client.connect(function(err)  {
     if(err) {
       return console.error('could not connect to postgres', err);
     }
+    redisClient.connect();
     client.query('SELECT NOW() AS "theTime";', function(err, result) {
         if(err) {
             return console.error('error running query', err);
@@ -114,6 +123,9 @@ app.post('/test', async (req, res) => {
 // select all rows from circles table
 app.get('/test1', authorizeUser, async (req, res) => {
     try {
+        //await redisClient.set('names231', 'test');
+        //const value = await redisClient.keys('*');
+        //console.log('VALUE', value)
         const results = await client.query('SELECT * FROM circles;');
         res.json(results.rows);
     } catch (err) {
