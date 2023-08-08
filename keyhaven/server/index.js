@@ -123,9 +123,6 @@ app.post('/test', async (req, res) => {
 // select all rows from circles table
 app.get('/test1', authorizeUser, async (req, res) => {
     try {
-        //await redisClient.set('names231', 'test');
-        //const value = await redisClient.keys('*');
-        //console.log('VALUE', value)
         const results = await client.query('SELECT * FROM circles;');
         res.json(results.rows);
     } catch (err) {
@@ -245,14 +242,26 @@ app.get('/account', authorizeUser, async (req, res) => {
 app.get('/account/isVerified', authorizeUser, async (req, res) => {
     try {
         const email = req.user.email
-        const results = await client.query(`SELECT is_verified FROM accounts WHERE email = '${email}';`);
-        let response
-        if (!results.rowCount) {
-            response = responses('account not found', 404)
-        } else {
-            response = responses('success-value', results.rows[0].is_verified)
-        }
-        res.status(response.code).send(response.body)
+        redisClient.get(`isVerified@${email}`).then(async (value, err) => {
+            if (err) {
+                throw err
+            } else {
+                let response
+                if (value) {
+                    response = responses('success-value', JSON.parse(value))
+                } else {
+                    const results = await client.query(`SELECT is_verified FROM accounts WHERE email = '${email}';`);
+                    const isVerified = results.rows[0].is_verified;
+                    if (!results.rowCount) {
+                        response = responses('account not found', 404)
+                    } else {
+                        response = responses('success-value', isVerified)
+                        await redisClient.setEx(`isVerified@${email}`, 60 * 30, isVerified, (value, err) => {if (err) throw(err)})
+                    }
+                }
+                return res.status(response.code).send(response.body)
+            }
+        })
     } catch (err) {
         res.status(500).send(err)
     }
@@ -419,7 +428,15 @@ app.get('/verifyEmail/:email/:token', async (req, res) => {
         if (token !== result.rows[0].email_key) {
             throw 'Email link is invalid'
         }
-        Promise.all([client.query(`UPDATE account_verif SET email_key = '' WHERE email = '${email}';`), client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`)]).then(_ => {
+        Promise.all([
+            client.query(`UPDATE account_verif SET email_key = '' WHERE email = '${email}';`),
+            client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`),
+            redisClient.exists(`isVerified@${email}`).then(async (isKeyValid, err) => {
+                if (isKeyValid) {
+                    await redisClient.setEx(`isVerified@${email}`, 60 * 30, true, (value, err) => {if (err) throw(err)})
+                }
+            })
+        ]).then(_ => {
             const response = responses('success-default')
             res.status(response.code).send(response.body)
         })
