@@ -166,9 +166,10 @@ export const Account = {
         };
         try {
             const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/account/signup`, {
-                headers: {'Content-Type':'application/json'},
+                headers: {'Content-Type':'application/json', 'Cache-Control': 'no-cache'},
                 method: "POST",
-                body: JSON.stringify(requestData)
+                body: JSON.stringify(requestData),
+                credentials: 'include'
             })
             const responseValue = await response.json()
             if (responseValue.type === 'FAIL' || !responseValue.type) {

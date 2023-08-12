@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Tooltip } from "@mui/material";
 import { Button } from "../pattern-library/Button";
 import { InputField } from "../pattern-library/InputField";
-import { useNavigate } from "react-router-dom";
 import { Account } from "../APIrequests";
 import { Loader } from "../pattern-library/Loader";
 import { MyAlert } from "../pattern-library/MyAlert";

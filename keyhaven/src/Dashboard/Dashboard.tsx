@@ -12,7 +12,7 @@ export const Dashboard = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     useEffect(() => {
-        Account.getLoggedIn().then(res => {
+        !isLoggedIn && Account.getLoggedIn().then(res => {
             if (res.type === 'FAIL') {
                 navigate('/');
             } else {

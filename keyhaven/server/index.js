@@ -3,6 +3,7 @@ const cors = require('cors')
 const pg = require('pg')
 const tables = require('./tables.js')
 const {responses, emailContentBuilder} = require('./functionLibrary.js')
+const { RedisCacheService } = require('./RedisCacheService.js')
 const dotenv = require('dotenv')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -22,26 +23,19 @@ app.use(cors({origin: process.env.CLIENT_URL, credentials: true}));
 
 
 let client = new pg.Client(connectionString)
-const redisClient = redis.createClient({
-    password: 'NkrmL67KkrSHUCeCMjWbimvGYS8kxGaX',
-    socket: {
-        host: 'redis-14910.c10.us-east-1-3.ec2.cloud.redislabs.com',
-        port: 14910
-    }
-});
+const cacheService = new RedisCacheService()
 const cryptoAlgorithm = 'aes-256-cbc';
 
 client.connect(function(err)  {
     if(err) {
       return console.error('could not connect to postgres', err);
     }
-    redisClient.connect();
+    cacheService.connect();
     client.query('SELECT NOW() AS "theTime";', function(err, result) {
         if(err) {
             return console.error('error running query', err);
         }
         console.log(result.rows[0].theTime);
-        // >> output: 2018-08-23T14:02:57.117Z
     });  
 });
 
@@ -53,11 +47,13 @@ const transporter = mailer.createTransport({
   }
 });
 
-const bearerTokenOptions = {
+const cookieOptions = {
     path: '/',
     httpOnly: true,
     maxAge: 30 * 60 * 1000 // expires in 30 minutes (min * sec * millisec)
 }
+
+const bearerTokenMaxAge = `${cookieOptions.maxAge / 1000}s`
 
 // table schemas
 const accountSchema = tables.accounts
@@ -242,26 +238,8 @@ app.get('/account', authorizeUser, async (req, res) => {
 app.get('/account/isVerified', authorizeUser, async (req, res) => {
     try {
         const email = req.user.email
-        redisClient.get(`isVerified@${email}`).then(async (value, err) => {
-            if (err) {
-                throw err
-            } else {
-                let response
-                if (value) {
-                    response = responses('success-value', JSON.parse(value))
-                } else {
-                    const results = await client.query(`SELECT is_verified FROM accounts WHERE email = '${email}';`);
-                    const isVerified = results.rows[0].is_verified;
-                    if (!results.rowCount) {
-                        response = responses('account not found', 404)
-                    } else {
-                        response = responses('success-value', isVerified)
-                        await redisClient.setEx(`isVerified@${email}`, 60 * 30, isVerified.toString()).then((value, err) => {if (err) throw(err)})
-                    }
-                }
-                return res.status(response.code).send(response.body)
-            }
-        })
+        const response = await cacheService.fetchCache(`isVerified@${email}`, client, `SELECT is_verified FROM accounts WHERE email = '${email}';`, true, 'is_verified')
+        return res.status(response.code).send(response.body)
     } catch (err) {
         res.status(500).send(err)
     }
@@ -348,11 +326,11 @@ app.post('/account/signup', async (req, res) => {
         await client.query(`INSERT INTO account_verif (email, email_key, pass_key) VALUES('${req.body.email}', '', '');`)
         await client.query(`INSERT INTO password_secrets (email, secret_key, iv) VALUES('${req.body.email}', '${secretKey}', '${iv}');`)
 
-        const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
+        const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: bearerTokenMaxAge})
 
         const response = responses('success-default')
         
-        res.status(response.code).cookie('keyHavenBearerToken', bearerToken, bearerTokenOptions).send(response.body);
+        res.status(response.code).cookie('keyHavenBearerToken', bearerToken, cookieOptions).send(response.body);
     } catch (err) {
         console.log(err)
         res.status(500).send(err)
@@ -366,11 +344,11 @@ app.post('/account/login', async (req, res) => {
             const isValidPassword = await bcrypt.compare(`${req.body.password}`, `${isValidEmail.rows[0].password}`)
             if (isValidPassword) {
 
-                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: '10000s'})
+                const bearerToken = jwt.sign({email: req.body.email}, process.env.JWT_ACCESS_KEY, {expiresIn: bearerTokenMaxAge})
 
                 const response = responses('success-default')
                 
-                res.status(response.code).cookie('keyHavenBearerToken', bearerToken, bearerTokenOptions).send(response.body);
+                res.status(response.code).cookie('keyHavenBearerToken', bearerToken, cookieOptions).send(response.body);
             } else {
                 throw(responses('invalid credentials'))
             }
@@ -431,11 +409,7 @@ app.get('/verifyEmail/:email/:token', async (req, res) => {
         Promise.all([
             client.query(`UPDATE account_verif SET email_key = '' WHERE email = '${email}';`),
             client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`),
-            redisClient.exists(`isVerified@${email}`).then(async (isKeyValid, err) => {
-                if (isKeyValid) {
-                    await redisClient.setEx(`isVerified@${email}`, 60 * 30, "true").then((value, err) => {if (err) throw(err)})
-                }
-            })
+            cacheService.updateCache(`isVerified@${email}`, true)
         ]).then(_ => {
             const response = responses('success-default')
             res.status(response.code).send(response.body)

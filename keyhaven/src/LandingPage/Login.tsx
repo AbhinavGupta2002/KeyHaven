@@ -24,11 +24,7 @@ export const Login = ({setIsLogin, navigate}: LoginProps) => {
                 setIsLoading(false)
                 setShowInvalidAlert(true)
             } else {
-                const payload = {
-                    email: email,
-                    password: password
-                }
-                Account.reqLogin(payload).then(res => {
+                Account.reqLogin({email, password}).then(res => {
                     setIsLoading(false)
                     if (res.type === 'SUCCESS') {
                         navigate('/dashboard')
