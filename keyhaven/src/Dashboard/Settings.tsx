@@ -68,7 +68,8 @@ export const Settings = (props: SettingsProps) => {
     }, [showVerifyAlert])
     useEffect(() => {
         if (isUpdating1 || isUpdating2) {
-            Account.put({firstName, lastName}).then(res => {
+            const payload = isUpdating1 ? {firstName} : {lastName}
+            Account.put(payload).then(res => {
                 if (checkBearerTokenExpiry(res)) {
                     props.navigate('/')
                 } else {

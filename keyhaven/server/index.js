@@ -10,7 +10,6 @@ const jwt = require('jsonwebtoken')
 const scheduler = require('node-schedule')
 const mailer = require('nodemailer')
 const cookieParser = require('cookie-parser')
-const redis = require('redis')
 const crypto = require('crypto')
 
 const app = express()
@@ -222,13 +221,8 @@ app.post('/email', authorizeUser, async (req, res) => {
 app.get('/account', authorizeUser, async (req, res) => {
     try {
         const email = req.user.email
-        const results = await client.query(`SELECT first_name, last_name, email, is_verified, joined, profile_image_url FROM accounts WHERE email = '${email}';`);
-        let response
-        if (!results.rowCount) {
-            response = responses('account not found', 404)
-        } else {
-            response = responses('success-value', results.rows[0])
-        }
+        const query = `SELECT first_name, last_name, email, is_verified, joined, profile_image_url FROM accounts WHERE email = '${email}';`
+        const response = await cacheService.fetchCache(`account@${email}`, client, query, true)
         res.status(response.code).send(response.body)
     } catch (err) {
         res.status(500).send(err)
@@ -238,7 +232,8 @@ app.get('/account', authorizeUser, async (req, res) => {
 app.get('/account/isVerified', authorizeUser, async (req, res) => {
     try {
         const email = req.user.email
-        const response = await cacheService.fetchCache(`isVerified@${email}`, client, `SELECT is_verified FROM accounts WHERE email = '${email}';`, true, 'is_verified')
+        const query = `SELECT is_verified FROM accounts WHERE email = '${email}';`
+        const response = await cacheService.fetchCache(`isVerified@${email}`, client, query, true, 'is_verified')
         return res.status(response.code).send(response.body)
     } catch (err) {
         res.status(500).send(err)
@@ -262,9 +257,15 @@ app.get('/account/isLoggedIn', async (req, res) => {
 app.put('/account', authorizeUser, async(req, res) => {
     try {
         const email = req.user.email
-        await client.query(`UPDATE accounts SET first_name = '${req.body.firstName}', last_name = '${req.body.lastName}' WHERE email = '${email}';`);
-        const response = responses('success-default')
-        res.status(response.code).send(response.body)
+        const firstName = req.body.firstName
+        const lastName = req.body.lastName
+        Promise.all([
+            client.query(`UPDATE accounts SET ${firstName ? `first_name = '${firstName}'` : `last_name = '${lastName}'`} WHERE email = '${email}';`),
+            cacheService.updateCache(`account@${email}`, null, true, firstName ? {first_name: firstName} : {last_name: lastName})
+        ]).then(_ => {
+            const response = responses('success-default')
+            res.status(response.code).send(response.body)
+        })
     } catch(err) {
         res.status(500).send(err)
     }

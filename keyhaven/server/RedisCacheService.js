@@ -20,9 +20,13 @@ class RedisCacheService {
         this.#client.connect()
     }
 
-    async updateCache(key, value) {
+    async updateCache(key, value, isEditJSON = false, JSONfields = {}) {
         const isKeyValid = await this.#client.exists(key)
         if (isKeyValid) {
+            if (isEditJSON) {
+                value = JSON.parse(await this.#client.get(key))
+                Object.keys(JSONfields).forEach(field => value[field] = JSONfields[field])
+            }
             await this.#client.setEx(key, this.#timeToExpire, JSON.stringify(value))
         }
     }
@@ -31,10 +35,8 @@ class RedisCacheService {
         const value = await this.#client.get(key)
         let response
         if (value) {
-            console.log("cached")
             response = responses('success-value', JSON.parse(value))
         } else {
-            console.log("uncached")
             const results = await DBclient.query(DBquery);
             if (!results.rowCount) {
                 response = responses('account not found', 404)

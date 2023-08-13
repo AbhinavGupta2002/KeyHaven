@@ -10,7 +10,7 @@ export const getIconUrl = async (url: string) => {
         }
         return responseValue.icons[0]?.url
     } catch (err) {
-        console.log(`ERROR: ${err}`)
+        console.error(`ERROR: ${err}`)
         return undefined
     }
 }
@@ -36,8 +36,8 @@ export const sendEmail = async(requestData: {receiverID: string, firstName: stri
 
 // Account is a user's account
 interface putAccount {
-    firstName: string;
-    lastName: string;
+    firstName?: string;
+    lastName?: string;
 }
 
 interface changeMasterPassword {
