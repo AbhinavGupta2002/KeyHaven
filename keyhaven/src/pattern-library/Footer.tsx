@@ -6,7 +6,7 @@ export const Footer = ({isAbsolute=false}) => {
     const navigate = useNavigate()
 
     return (
-        <footer aria-label="Site Footer" className={`bg-default1 ${isAbsolute ? 'absolute bottom-0 w-full' : ''}`}>
+        <footer aria-label="Site Footer" className={`bg-default1 z-20 ${isAbsolute ? 'absolute bottom-0 w-full' : ''}`}>
             <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="sm:flex sm:items-center sm:justify-between">
                 <div className="flex justify-center sm:justify-start" onClick={() => navigate('/')}>

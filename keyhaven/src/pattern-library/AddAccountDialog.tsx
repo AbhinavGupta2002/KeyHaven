@@ -83,7 +83,7 @@ export const AddAccountDialog = (props: AddAccountDialogProps) => {
         <>
             <div className='top-20 left-1/2 right-1/2 flex justify-center absolute' style={{zIndex: '99999'}}><MyAlert content='Please enter all mandatory details in the valid manner!' isVisible={IsVisibleAlert} setInvisible={() => setIsVisibleAlert(false)} severity='warning'/></div>
             <Dialog open={props.isVisible} className="-z-20">
-                <DialogTitle>Add Account</DialogTitle>
+                <DialogTitle className="text-center sm:text-left">Add Account</DialogTitle>
                 <DialogContent className="flex flex-col gap-5 m-5">
                     <img src={iconUrl} className="w-20 h-16 self-center object-contain"/>
                     <div className="flex gap-2">

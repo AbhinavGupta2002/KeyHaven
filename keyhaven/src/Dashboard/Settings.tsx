@@ -31,7 +31,6 @@ const getCustomDate = (date: string): string => {
 }
 
 export const Settings = (props: SettingsProps) => {
-    const [isDisabled, setIsDisabled] = useState(true)
     const [isEditFirstName, setIsEditFirstName] = useState(false)
     const [isEditLastName, setIsEditLastName] = useState(false)
     const [firstName, setFirstName] = useState('')
@@ -48,6 +47,7 @@ export const Settings = (props: SettingsProps) => {
     const [email, setEmail] = useState('')
     const [dateJoined, setDateJoined] = useState('')
     const [isVerified, setIsVerified] = useState(false)
+    const isDisabled = true
 
     const setAccountDetails = (res: Account) => {
         setIsLoading(false)
@@ -98,16 +98,16 @@ export const Settings = (props: SettingsProps) => {
         <>
             <MyAlert isVisible={showPassAlert} setInvisible={() => setShowPassAlert(false)} content="An email has been sent to you to change the password!" severity="info"/>
             <MyAlert isVisible={showVerifyAlert} setInvisible={() => setShowVerifyAlert(false)} content="An email has been sent to you for verification!" severity="info"/>
-            <div className="text-2xl mb-9">Settings</div>
-            <div className="ml-16 gap-10 xl:gap-0 xl:space-x-40 flex flex-col-reverse xl:flex-row">
-                <div className="space-y-6">
-                    <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                        <BoxTypeA classname="flex justify-between w-96">
+            <div className="text-2xl mb-9 text-center sm:text-left">Settings</div>
+            <div className="sm:ml-16 gap-10 xl:gap-0 xl:space-x-40 flex flex-col-reverse xl:flex-row flex-wrap items-center sm:items-start">
+                <div className="space-y-6 flex flex-col items-center sm:items-start">
+                    <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-2">
+                        <BoxTypeA classname="flex justify-between w-80 sm:w-96">
                             <div className="font-semibold self-center">First Name</div>
                             {isLoading ?
                                 <Skeleton animation="wave" width={100}/> :
                                 isEditFirstName ?
-                                    <input placeholder="Enter First Name" className="p-1 border border-gray-300 rounded-sm" value={firstName} onChange={e => setFirstName(e.target.value)}/> :
+                                    <input placeholder="Enter First Name" className="p-1 border border-gray-300 rounded-sm text-right" value={firstName} onChange={e => setFirstName(e.target.value)}/> :
                                     <div>{firstName}</div>
                             }
                         </BoxTypeA>
@@ -123,13 +123,13 @@ export const Settings = (props: SettingsProps) => {
                                 <FiEdit className="self-center cursor-pointer" onClick={() => setIsEditFirstName(!isEditFirstName)}/>
                         }
                     </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                        <BoxTypeA classname="flex justify-between w-96">
+                    <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-2">
+                        <BoxTypeA classname="flex justify-between w-80 sm:w-96">
                             <div className="font-semibold self-center">Last Name</div>
                             {isLoading ?
                                 <Skeleton animation="wave" width={100}/> :
                                 isEditLastName ?
-                                    <input placeholder="Enter Last Name" className="p-1 border border-gray-300 rounded-sm" value={lastName} onChange={e => setLastName(e.target.value)}/> :
+                                    <input placeholder="Enter Last Name" className="p-1 border border-gray-300 rounded-sm text-right" value={lastName} onChange={e => setLastName(e.target.value)}/> :
                                     <div>{lastName}</div>
                             }
                         </BoxTypeA>
@@ -145,8 +145,8 @@ export const Settings = (props: SettingsProps) => {
                                 <FiEdit className="self-center cursor-pointer" onClick={() => setIsEditLastName(true)}/>
                         }
                     </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                        <BoxTypeA classname="flex justify-between w-96">
+                    <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-2">
+                        <BoxTypeA classname="flex justify-between w-80 sm:w-96">
                             <div className="font-semibold">Email</div>
                             {isLoading ?
                                 <Skeleton animation="wave" width={100}/> :
@@ -164,11 +164,11 @@ export const Settings = (props: SettingsProps) => {
                                 </label>
                         }
                     </div>
-                    <BoxTypeA classname="flex justify-between align-middle w-96">
+                    <BoxTypeA classname="flex justify-between align-middle w-80 sm:w-96">
                         <div className="font-semibold mt-2">Master Password</div>
                         <Button disabled={isLoading} value='Change' action={() => setShowPassAlert(true)}/>
                     </BoxTypeA>
-                    <BoxTypeA classname="flex justify-between w-96">
+                    <BoxTypeA classname="flex justify-between w-80 sm:w-96">
                         <div className="font-semibold">Date Joined</div>
                         {isLoading ?
                             <Skeleton animation="wave" width={100}/> :
@@ -190,17 +190,17 @@ export const Settings = (props: SettingsProps) => {
                             </Tooltip>
                         }
                     </BoxTypeA>
-                    <Button disabled={isLoading} classname='font-bold text-red-600' value='Delete Account' action={() => setShowDeleteAccountDialog(true)}/>
+                    <Button disabled={isLoading} classname='font-bold text-red-600 w-fit' value='Delete Account' action={() => setShowDeleteAccountDialog(true)}/>
                 </div>
-                <BoxTypeA classname="flex-col space-y-4 w-96 h-fit">
+                <BoxTypeA classname="flex-col space-y-4 w-80 sm:w-96 h-fit">
                     <div className="font-semibold text-center">Profile Image</div>
                     {isLoading ?
                         <Skeleton animation="wave" height={200} width={300} className="ml-auto mr-auto"/> :
                         <img className="w-52 h-52 ml-auto mr-auto" src={defaultAvatar}/>
                     }
-                    <div className="flex justify-between">
+                    <div className="flex justify-between flex-col gap-5 sm:flex-row sm:gap-0">
                         <Button disabled={isLoading || isDisabled} value={'Set To Default'} action={() => {}}/>
-                        <Button disabled={isLoading} value={'Upload Image'} action={() => {}}/>
+                        <Button disabled={isLoading || isDisabled} value={'Upload Image'} action={() => {}}/>
                     </div>
                 </BoxTypeA>
             </div>

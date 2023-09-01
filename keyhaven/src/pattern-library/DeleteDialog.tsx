@@ -30,8 +30,8 @@ export const DeleteDialog = (props: DeleteDialogProps) => {
 
     return (
         <Dialog open={props.isVisible}>
-            <DialogTitle>Delete Account</DialogTitle>
-            <DialogContent>
+            <DialogTitle className="text-center sm:text-left">Delete Account</DialogTitle>
+            <DialogContent className="text-center sm:text-left">
                 Are you sure you want to delete this account permanently?
             </DialogContent>
             <DialogContent className="flex gap-12 justify-center">

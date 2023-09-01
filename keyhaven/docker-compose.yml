@@ -13,6 +13,7 @@ services:
     environment:
       - REACT_APP_SERVER_URL=${REACT_APP_SERVER_URL}
       - PORT=${PORT}
+      - REACT_APP_REPORT_URL=${REACT_APP_REPORT_URL}
 
   express-app-container:
     build:

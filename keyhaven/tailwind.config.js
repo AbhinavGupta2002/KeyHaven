@@ -24,6 +24,7 @@ module.exports = {
       },
       screens: {
         'custom': '1057px',
+        'nav': '975px',
         'xs': '460px',
         'h_xs': { 'raw': '(min-height: 810px)' },
       }

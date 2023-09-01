@@ -23,13 +23,15 @@ export const Dashboard = () => {
     
     return (
         isLoggedIn ?
-        <>
-            <Header/>
-            <div className="flex">
-                <NavBar nav={nav} setNav={setNav}/>
-                <DashboardBody nav={nav} navigate={navigate}/>
+        <div className="flex flex-col min-h-screen">
+            <div className="flex-1">
+                <Header/>
+                <div className="flex overflow-x-auto">
+                    <NavBar nav={nav} setNav={setNav}/>
+                    <DashboardBody nav={nav} navigate={navigate}/>
+                </div>
             </div>
-            <Footer isAbsolute/>
-        </> : <></>
+            <Footer/>
+        </div> : <></>
     )
 }

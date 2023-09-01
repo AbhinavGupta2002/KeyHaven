@@ -12,8 +12,8 @@ import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io'
 import { RxDoubleArrowRight, RxDoubleArrowLeft } from 'react-icons/rx'
-import { TableHead, Tooltip } from '@mui/material';
-import { AiOutlinePlus, AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
+import { TableHead } from '@mui/material';
+import { AiOutlinePlus } from 'react-icons/ai'
 import { PersonalAccountsRow } from './PersonalAccountsRow';
 import { AddAccountDialog } from '../pattern-library/AddAccountDialog';
 import { Account, PasswordAccount } from '../APIrequests';
@@ -107,9 +107,9 @@ export function createRowData(title: string, username: string, password: string,
 }
 
 export const PersonalAccounts = (props: PersonalAccountsProps) => {
-  const [rows, setRows] = useState(Array(5).fill(createRowData('', '', '', '', '', false)))
+  const [rows, setRows] = useState(Array(window.innerHeight >= 810 ? 6 : window.innerHeight < 720 ? 3 : 5).fill(createRowData('', '', '', '', '', false)))
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(6);
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [isDataLoaded, setIsDataLoaded] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
@@ -188,16 +188,36 @@ export const PersonalAccounts = (props: PersonalAccountsProps) => {
       }
   }, [isDataLoaded])
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerHeight < 720) {
+        setRowsPerPage(3);
+      } else if (window.innerHeight < 810) {
+        setRowsPerPage(5);
+      } else {
+        setRowsPerPage(6);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <>
-      <h1 className='text-2xl mb-6'>Personal Accounts</h1>
+      <h1 className='text-2xl mb-6 text-center sm:text-left'>Personal Accounts</h1>
       {!isDataLoaded || (isVerified && rows.length) ?
-        <div className='pr-5'>
-          <button className={`flex gap-3 p-1 rounded-md ml-auto mb-2 ${isDataLoaded ? 'cursor-pointer hover:bg-default1 hover:text-white' : 'cursor-default bg-gray-200 text-gray-500'}`} onClick={() => isDataLoaded && setShowAddDialog(true)}>
+        <>
+          <button className={`flex gap-3 p-1 rounded-md ml-auto mr-auto sm:mr-0 mb-2 ${isDataLoaded ? 'cursor-pointer hover:bg-default1 hover:text-white' : 'cursor-default bg-gray-200 text-gray-500'}`} onClick={() => isDataLoaded && setShowAddDialog(true)}>
             <AiOutlinePlus className='self-center'/>
             <div>Add Account</div>
           </button>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} className='-z-10'>
             <Table aria-label="custom pagination table">
               <TableHead>
                 <TableRow className='bg-gray-100'>
@@ -247,7 +267,7 @@ export const PersonalAccounts = (props: PersonalAccountsProps) => {
               </TableFooter>
             </Table>
           </TableContainer>
-        </div> :
+        </> :
         <div className='flex flex-col gap-10 mt-20'>
           <div className='flex justify-center'>
             <img src={emptyBoards} className=' w-1/5'/>

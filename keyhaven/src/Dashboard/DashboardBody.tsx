@@ -13,7 +13,7 @@ type DashboardBodyProps = {
 export const DashboardBody = (props: DashboardBodyProps) => {
 
     return (
-        <div className="pt-24 pl-5 w-full">
+        <div className="pt-24 pl-5 pr-5 w-full pb-10">
             {props.nav === 0 ?
                 <PersonalAccounts navigate={props.navigate}/> :
             props.nav === 1 ?

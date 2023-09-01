@@ -24,8 +24,8 @@ export const LogoutDialog = (props: DeleteDialogProps) => {
 
     return (
         <Dialog open={props.isVisible}>
-            <DialogTitle>Account Logout</DialogTitle>
-            <DialogContent>
+            <DialogTitle className="text-center sm:text-left">Account Logout</DialogTitle>
+            <DialogContent className="text-center sm:text-left">
                 Are you sure you want to log out of your account?
             </DialogContent>
             <DialogContent className="flex gap-12 justify-center">
