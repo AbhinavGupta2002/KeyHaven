@@ -59,6 +59,7 @@ const cookieOptions = {
     path: '/',
     httpOnly: true,
     secure: true,
+    sameSite: 'none',
     maxAge: 30 * 60 * 1000 // expires in 30 minutes (min * sec * millisec)
 }
 
