@@ -14,6 +14,8 @@ ENV SERVER_URL=http://localhost:5432
 
 ENV EMAIL_KEY=nyuohojhlkgnjrwx
 
+ENV CA=`null`
+
 WORKDIR /express-app-container
 COPY package*.json ./
 RUN npm install

@@ -25,7 +25,7 @@ class RedisCacheService {
         if (isKeyValid) {
             if (isEditJSON) {
                 value = JSON.parse(await this.#client.get(key))
-                Object.keys(JSONfields).forEach(field => value[field] = JSONfields[field])
+                Object.keys(JSONfields).forEach(field => value[field] = JSON.stringify(JSONfields[field]))
             }
             await this.#client.setEx(key, this.#timeToExpire, JSON.stringify(value))
         }
@@ -56,6 +56,16 @@ class RedisCacheService {
             }
         }
         return response
+    }
+
+    async deleteCache(email) {
+        Promise.all([this.#client.del(`account@${email}`), this.#client.del(`isVerified@${email}`)]).then(_ => {
+            return;
+        })
+    }
+
+    async deleteAllCache() {
+        await this.#client.flushAll();
     }
 }
 

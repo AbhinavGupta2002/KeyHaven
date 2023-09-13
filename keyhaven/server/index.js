@@ -11,17 +11,25 @@ const scheduler = require('node-schedule')
 const mailer = require('nodemailer')
 const cookieParser = require('cookie-parser')
 const crypto = require('crypto')
+const parseConnectionString = require('pg-connection-string').parse;
 
 const app = express()
 dotenv.config()
 const connectionString = process.env.CONNECTION_STRING
+let config = parseConnectionString(connectionString);
+
+if (process.env.CA != "null") {
+    config.ssl = {
+        rejectUnauthorized: true,
+        ca: process.env.CA
+    }
+}
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({origin: process.env.CLIENT_URL, credentials: true}));
 
-
-let client = new pg.Client(connectionString)
+let client = new pg.Client(config)
 const cacheService = new RedisCacheService()
 const cryptoAlgorithm = 'aes-256-cbc';
 
@@ -385,6 +393,7 @@ app.delete('/account', authorizeUser, async (req, res) => {
         await client.query(`DELETE FROM password_secrets WHERE email = '${email}';`)
         await client.query(`DELETE FROM account_verif WHERE email = '${email}';`)
         await client.query(`DELETE FROM accounts WHERE email = '${email}';`)
+        await cacheService.deleteCache(email)
 
         const response = responses('success-default')
         res.status(response.code).send(response.body)
@@ -410,6 +419,7 @@ app.get('/verifyEmail/:email/:token', async (req, res) => {
         Promise.all([
             client.query(`UPDATE account_verif SET email_key = '' WHERE email = '${email}';`),
             client.query(`UPDATE accounts SET is_verified = TRUE WHERE email = '${email}';`),
+            cacheService.updateCache(`account@${email}`, null, true, {is_verified: true}),
             cacheService.updateCache(`isVerified@${email}`, true)
         ]).then(_ => {
             const response = responses('success-default')
