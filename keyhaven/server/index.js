@@ -57,6 +57,7 @@ const transporter = mailer.createTransport({
 const cookieOptions = {
     path: '/',
     httpOnly: true,
+    secure: true,
     maxAge: 30 * 60 * 1000 // expires in 30 minutes (min * sec * millisec)
 }
 
@@ -113,48 +114,7 @@ app.get('/api', async (req, res) => {
 }
 );
 
-app.post('/test', async (req, res) => {
-    try {
-        const results = await client.query('CREATE TABLE IF NOT EXISTS abhinav( id SERIAL PRIMARY KEY, username TEXT UNIQUE );');
-        const response = responses('success-default')
-        res.status(response.code).send(response.body)
-    } catch (err) {
-        console.log(err);
-    }
-});
-
-// select all rows from circles table
-app.get('/test1', authorizeUser, async (req, res) => {
-    try {
-        const results = await client.query('SELECT * FROM circles;');
-        res.json(results.rows);
-    } catch (err) {
-        console.log(err);
-    }
-});
-
-// adds a new row of data to circles table
-app.post('/test2', async (req, res) => {
-    try {
-        const results = await client.query(`INSERT INTO circles (title, members) VALUES('new test', ARRAY [32, 1023]);`);
-        const response = responses('success-default')
-        res.status(response.code).send(response.body)
-    } catch (err) {
-        console.log(err);
-    }
-});
-
-// appends a new text value to an existing row in circles table
-app.put('/test3', async (req, res) => {
-    try {
-        const results = await client.query(`UPDATE circles SET members = ARRAY_APPEND(members, '999') WHERE title = 'new test';`)
-        const response = responses('success-default')
-        res.status(response.code).send(response.body)
-    } catch (err) {
-        console.log(err);
-    }
-})
-
+/*
 // creates all table schemas in db if they do not exist
 app.post('/create-tables', async (req, res) => {
     try {
@@ -168,16 +128,7 @@ app.post('/create-tables', async (req, res) => {
         console.log(err);
     }
 });
-
-function responses1(status) {
-    if (status) {
-        if (status === 'success-default') {
-            return {code: 200, body: {type: 'SUCCESS'}}
-        }
-        return null
-    }
-    return null
-}
+*/
 
 const saveVerifToken = async (req, columnName) => {
     const token = crypto.randomBytes(16).toString('hex')
